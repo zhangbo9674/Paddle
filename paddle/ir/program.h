@@ -32,16 +32,10 @@ namespace ir {
 ///
 class Program {
  public:
-  ///
-  /// \brief Interfaces for operation.
-  ///
   std::list<Operation*> ops() const { return ops_; }
 
   void InsertOp(Operation* op);
 
-  ///
-  /// \brief Interfaces for parameters.
-  ///
   std::unordered_map<StrAttribute, Variable*> weights() const {
     return parameters_;
   }
