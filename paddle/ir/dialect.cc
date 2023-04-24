@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "paddle/ir/dialect.h"
+#include "paddle/ir/dialect_interface.h"
 
 namespace ir {
 Dialect::Dialect(std::string name, ir::IrContext *context, ir::TypeId id)
@@ -35,4 +36,11 @@ void Dialect::RegisterAttribute(ir::AbstractAttribute &&abstract_attribute) {
 void Dialect::RegisterOperation(ir::TypeId id, OpInfoImpl *op_info) {
   this->ir_context()->RegisterOperation(id, op_info);
 }
+
+void Dialect::RegisterInterface(std::unique_ptr<DialectInterface> interface) {
+  auto it = registered_interfaces_.try_emplace(interface->interface_id(),
+                                               std::move(interface));
+  (void)it;
+}
+
 }  // namespace ir
