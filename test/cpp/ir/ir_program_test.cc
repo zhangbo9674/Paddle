@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "paddle/ir/builtin_dialect.h"
-#include "paddle/ir/builtin_attribute.h"
-#include "paddle/ir/builtin_op.h"
-#include "paddle/ir/builtin_type.h"
+#include <gtest/gtest.h>
 
-namespace ir {
-BuiltinDialect::BuiltinDialect(ir::IrContext *context)
-    : ir::Dialect(name(), context, ir::TypeId::get<BuiltinDialect>()) {
-  initialize();
+#include "paddle/ir/program.h"
+
+TEST(program_test, program) {
+  // Create an empty program object
+  ir::Program *program = new ir::Program();
+  auto ops = program->ops();
+  auto weights = program->weights();
+  std::cout << ops.size() << std::endl;
+  std::cout << weights.size() << std::endl;
+  EXPECT_EQ(program->ops().size() == 0, true);
+  EXPECT_EQ(program->weights().size() == 0, true);
 }
-
-void BuiltinDialect::initialize() {
-  // Register all built-in types defined in builtin_type.h.
-  RegisterTypes<GET_BUILT_IN_TYPE_LIST>();
-  RegisterAttributes<GET_BUILT_IN_ATTRIBUTE_LIST>();
-  RegisterOps<GET_BUILT_IN_OP_LIST>();
-}
-
-}  // namespace ir

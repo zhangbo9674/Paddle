@@ -15,6 +15,7 @@
 #pragma once
 
 #include "paddle/ir/attribute_base.h"
+#include "paddle/ir/dialect_interface.h"
 #include "paddle/ir/ir_context.h"
 #include "paddle/ir/op_info_impl.h"
 #include "paddle/ir/type_base.h"
