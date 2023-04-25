@@ -19,7 +19,9 @@
 namespace ir {
 class Dialect;
 class IrContext;
-
+///
+/// \brief DialectInterface
+///
 template <typename ConcreteType, typename BaseT>
 class DialectInterfaceBase : public BaseT {
  public:
@@ -39,7 +41,7 @@ class DialectInterface {
   /// The base class used for all derived interface types. This class provides
   /// utilities necessary for registration.
   template <typename ConcreteType>
-  using Base = detail::DialectInterfaceBase<ConcreteType, DialectInterface>;
+  using Base = DialectInterfaceBase<ConcreteType, DialectInterface>;
 
   /// Return the dialect that this interface represents.
   Dialect *dialect() const { return dialect_; }

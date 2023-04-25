@@ -43,6 +43,8 @@ void Dialect::RegisterInterface(std::unique_ptr<DialectInterface> interface) {
   (void)it;
 }
 
+DialectInterface::~DialectInterface() = default;
+
 IrContext *DialectInterface::ir_context() const {
   return dialect_->ir_context();
 }
