@@ -50,8 +50,10 @@ class Dialect {
   template <typename T>
   void RegisterType() {
     VLOG(4) << "Type registered into Dialect. --->";
-    if (this->ir_context()->registed_abstract_type().count(
-            ir::TypeId::get<T>()) == 0) {
+    // if (this->ir_context()->registed_abstract_type().count(
+    //         ir::TypeId::get<T>()) == 0) {
+    if (this->ir_context()->GetRegisteredAbstractType(ir::TypeId::get<T>()) ==
+        nullptr) {
       ir::AbstractType *abstract_type =
           new ir::AbstractType(std::move(ir::AbstractType::get<T>(*this)));
       this->ir_context()->RegisterAbstractType(ir::TypeId::get<T>(),
@@ -83,8 +85,8 @@ class Dialect {
   template <typename T>
   void RegisterAttribute() {
     VLOG(4) << "Attribute registered into Dialect. --->";
-    if (this->ir_context()->registed_abstract_attribute().count(
-            ir::TypeId::get<T>()) == 0) {
+    if (this->ir_context()->GetRegisteredAbstractAttribute(
+            ir::TypeId::get<T>()) == nullptr) {
       ir::AbstractAttribute *abstract_attribute = new ir::AbstractAttribute(
           std::move(ir::AbstractAttribute::get<T>(*this)));
       this->ir_context()->RegisterAbstractAttribute(ir::TypeId::get<T>(),
@@ -100,23 +102,22 @@ class Dialect {
   /// \brief Register Operation methods.
   ///
   template <typename... Args>
-  void RegisterOperations() {
-    (void)std::initializer_list<int>{0, (RegisterOperation<Args>(), 0)...};
+  void RegisterOps() {
+    (void)std::initializer_list<int>{0, (RegisterOp<Args>(), 0)...};
   }
 
   template <typename ConcertOp>
-  void RegisterOperation() {
-    VLOG(4) << "Operation registered into Dialect. --->";
-    if (this->ir_context()->registed_operation().count(
-            ir::TypeId::get<ConcertOp>()) == 0) {
+  void RegisterOp() {
+    VLOG(4) << "Op registered into Dialect. --->";
+    if (this->ir_context()->GetRegisteredOpInfo(ir::TypeId::get<ConcertOp>()) ==
+        nullptr) {
       ir::OpInfoImpl *op_info = ir::OpInfoImpl::create<ConcertOp>();
-      this->ir_context()->RegisterOperation(ir::TypeId::get<ConcertOp>(),
-                                            op_info);
+      this->ir_context()->RegisterOpInfo(ir::TypeId::get<ConcertOp>(), op_info);
     }
     VLOG(4) << "----------------------------------";
   }
 
-  void RegisterOperation(ir::TypeId id, OpInfoImpl *op_info);
+  void RegisterOp(ir::TypeId id, OpInfoImpl *op_info);
 
   ///
   /// \brief Register interface methods.

@@ -68,6 +68,7 @@ class Operation1 : public ir::Op<Operation1> {
   using Op::Op;
   static const char *name() { return "Operation1"; }
   static const char *attributes_name_[];
+  static uint32_t attributes_num() { return 2; }
 };
 const char *Operation1::attributes_name_[] = {"op1_attr1", "op1_attr2"};
 
@@ -78,6 +79,7 @@ class Operation2
   using Op::Op;
   static const char *name() { return "Operation2"; }
   static const char *attributes_name_[];
+  static uint32_t attributes_num() { return 2; }
   static void InferShape() {
     std::cout << "This is op2's InferShape interface." << std::endl;
   }
@@ -94,7 +96,7 @@ class TestDialect : public ir::Dialect {
   static const char *name() { return "op_test"; }
 
  private:
-  void initialize() { RegisterOperations<Operation1, Operation2>(); }
+  void initialize() { RegisterOps<Operation1, Operation2>(); }
 };
 
 ir::DictionaryAttribute CreateAttribute(std::string attribute_name,
@@ -115,12 +117,13 @@ TEST(op_test, op_test) {
   std::cout << test_dialect << std::endl;
 
   // (2) Get registered operations.
-  std::unordered_map<ir::TypeId, ir::OpInfoImpl *> operations =
-      ctx->registed_operation();
-  EXPECT_EQ(operations.count(ir::TypeId::get<Operation1>()) == 1, true);
-  EXPECT_EQ(operations.count(ir::TypeId::get<Operation2>()) == 1, true);
-  ir::OpInfoImpl *op1_info = operations[ir::TypeId::get<Operation1>()];
-  ir::OpInfoImpl *op2_info = operations[ir::TypeId::get<Operation2>()];
+  ir::OpInfoImpl *op1_info =
+      ctx->GetRegisteredOpInfo(ir::TypeId::get<Operation1>());
+  EXPECT_EQ(op1_info != nullptr, true);
+  ir::OpInfoImpl *op2_info =
+      ctx->GetRegisteredOpInfo(ir::TypeId::get<Operation2>());
+  EXPECT_EQ(op2_info != nullptr, true);
+
   EXPECT_EQ(op1_info->HasTrait<ReadOnlyTrait>(), false);
   EXPECT_EQ(op1_info->HasInterface<InferShapeInterface>(), false);
   EXPECT_EQ(op2_info->HasTrait<ReadOnlyTrait>(), true);

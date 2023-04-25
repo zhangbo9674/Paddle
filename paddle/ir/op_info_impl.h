@@ -50,16 +50,13 @@ class ConstructInterfacesOrTraits {
   template <typename T>
   static void PlacementConstrctInterface(
       std::pair<TypeId, void *> *&p_interface) {  // NOLINT
-    void *ptmp = malloc(sizeof(typename T::template Model<ConcreteOp>));
-    new (ptmp) typename T::template Model<ConcreteOp>();
-    std::pair<ir::TypeId, void *> pair_tmp =
-        std::make_pair(ir::TypeId::get<T>(), ptmp);
-    VLOG(4) << "New a interface: id[" << pair_tmp.first.storage()
-            << "], interface[" << pair_tmp.second << "].";
-    memcpy(reinterpret_cast<void *>(p_interface),
-           reinterpret_cast<void *>(&pair_tmp),
-           sizeof(std::pair<ir::TypeId, void *>));
-    p_interface += 1;
+    new (&(p_interface->first)) TypeId(ir::TypeId::get<T>());
+    p_interface->second =
+        malloc(sizeof(typename T::template Model<ConcreteOp>));
+    new (p_interface->second) typename T::template Model<ConcreteOp>();
+    VLOG(4) << "New a interface: id[" << p_interface->first.storage()
+            << "], interface[" << p_interface->second << "].";
+    ++p_interface;
   }
 
   /// Placement new trait.
@@ -67,7 +64,7 @@ class ConstructInterfacesOrTraits {
   static void PlacementConstrctTrait(ir::TypeId *&p_trait) {  // NOLINT
     new (p_trait) TypeId(ir::TypeId::get<T>());
     VLOG(4) << "New a trait: id[" << (*p_trait).storage() << "].";
-    p_trait += 1;
+    ++p_trait;
   }
 };
 
@@ -103,8 +100,7 @@ class OpInfoImpl {
     size_t interfaces_num =
         std::tuple_size<typename ConcreteOp::InterfaceList>::value;
     size_t traits_num = std::tuple_size<typename ConcreteOp::TraitList>::value;
-    size_t attributes_num = sizeof(ConcreteOp::attributes_name_) /
-                            sizeof(ConcreteOp::attributes_name_[0]);
+    size_t attributes_num = ConcreteOp::attributes_num();
     VLOG(4) << "Create OpInfoImpl with: " << interfaces_num << " interfaces, "
             << traits_num << " traits, " << attributes_num << " attributes.";
     size_t base_size = sizeof(std::pair<ir::TypeId, void *>) * interfaces_num +
@@ -215,17 +211,17 @@ class OpInfoImpl {
               reinterpret_cast<char *>(const_cast<OpInfoImpl *>(this)) -
               sizeof(ir::TypeId) * num_traits_ -
               sizeof(std::pair<ir::TypeId, void *>) * num_interfaces_);
-      int left = 0;
-      int right = num_interfaces_ - 1;
-      while (left <= right) {
-        int mid = (right - left) / 2 + left;
+      size_t left = 0;
+      size_t right = num_interfaces_;
+      while (left < right) {
+        size_t mid = left + (right - left) / 2;
         if ((p_first_interface + mid)->first == interface_id) {
           return reinterpret_cast<typename Interface::Concept *>(
               (p_first_interface + mid)->second);
         } else if ((p_first_interface + mid)->first < interface_id) {
           left = mid + 1;
         } else {
-          right = mid - 1;
+          right = mid;
         }
       }
     }
