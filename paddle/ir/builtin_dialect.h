@@ -31,7 +31,7 @@ class BuiltinDialect : public ir::Dialect {
   ///
   /// \return The name of this Dialect.
   ///
-  static const char *name() { return "builtin"; }
+  static const char *name() { return "Builtin"; }
 
  private:
   void initialize();

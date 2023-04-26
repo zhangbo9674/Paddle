@@ -52,6 +52,8 @@ class alignas(8) Operation final {
 
   uint32_t num_operands() const { return num_operands_; }
 
+  std::string op_name() const;
+
   template <typename T>
   T dyn_cast() const {
     return CastUtil<T>::call(this);

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "paddle/ir/operation.h"
+#include "paddle/ir/dialect.h"
 #include "paddle/ir/program.h"
 #include "paddle/ir/utils.h"
 
@@ -175,6 +176,11 @@ std::string Operation::print() {
   }
   result << ")";
   return result.str();
+}
+
+std::string Operation::op_name() const {
+  return op_info_.impl()->dialect()->name() + "." +
+         std::string(op_info_.impl()->name());
 }
 
 }  // namespace ir
