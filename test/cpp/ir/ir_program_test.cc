@@ -21,8 +21,12 @@ TEST(program_test, program) {
   ir::Program *program = new ir::Program();
   auto ops = program->ops();
   auto weights = program->weights();
-  std::cout << ops.size() << std::endl;
-  std::cout << weights.size() << std::endl;
   EXPECT_EQ(program->ops().size() == 0, true);
   EXPECT_EQ(program->weights().size() == 0, true);
+
+  // Def a program:
+  // a = GetParameterOp("a")
+  // b = GetParameterOp("b")
+  // c = AddOp(a, b)
+  // SetParameterOp(c, "c")
 }
