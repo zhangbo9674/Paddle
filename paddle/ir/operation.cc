@@ -67,6 +67,9 @@ Operation *Operation::create(const std::vector<ir::OpResult> &inputs,
     base_ptr += sizeof(detail::OpOperandImpl);
   }
   VLOG(4) << "Construct an Operation: " << op->print();
+  if (parent_program) {
+    parent_program->InsertOp(op);
+  }
   return op;
 }
 
@@ -123,7 +126,7 @@ Operation::Operation(uint32_t num_results,
                      ir::DictionaryAttribute attribute,
                      ir::OpInfo op_info,
                      ir::Program *parent_program) {
-  if (!attribute) {
+  if (op_info.impl()->AttributeNum() != 0 && !attribute) {
     throw("unexpected null attribute dictionary");
   }
   num_results_ = num_results;
