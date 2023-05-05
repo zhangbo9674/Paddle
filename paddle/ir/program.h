@@ -19,7 +19,7 @@
 
 #include "paddle/ir/builtin_attribute.h"
 #include "paddle/ir/operation.h"
-#include "paddle/ir/variable.h"
+#include "paddle/ir/parameter.h"
 
 namespace ir {
 ///
@@ -36,18 +36,18 @@ class Program {
 
   void InsertOp(Operation* op);
 
-  std::unordered_map<StrAttribute, Variable*> weights() const {
+  std::unordered_map<StrAttribute, Parameter*> parameters() const {
     return parameters_;
   }
 
-  Variable* GetParameter(std::string name) const;
+  Parameter* GetParameter(std::string name) const;
 
-  void SetParameter(std::string name, Variable* parameter);
+  void SetParameter(std::string name, Parameter* parameter);
 
  private:
   std::list<Operation*> ops_;
 
-  std::unordered_map<StrAttribute, Variable*> parameters_;
+  std::unordered_map<StrAttribute, Parameter*> parameters_;
 };
 
 }  // namespace ir

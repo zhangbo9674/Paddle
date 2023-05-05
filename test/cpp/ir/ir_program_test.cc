@@ -40,7 +40,7 @@ TEST(program_test, program) {
   // (2) Create an empty program object
   ir::Program *program = new ir::Program();
   EXPECT_EQ(program->ops().size() == 0, true);
-  EXPECT_EQ(program->weights().size() == 0, true);
+  EXPECT_EQ(program->parameters().size() == 0, true);
 
   // (3) Def a program:
   // a = GetParameterOp("a")

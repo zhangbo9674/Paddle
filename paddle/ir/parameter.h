@@ -18,9 +18,9 @@
 
 namespace ir {
 ///
-/// \brief Variable represents the weight in the calculation graph.
+/// \brief Parameter represents the weight in the calculation graph.
 ///
-class Variable {
+class Parameter {
  public:
   TypeId type() const { return type_; }
 
