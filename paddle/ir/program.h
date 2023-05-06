@@ -36,18 +36,18 @@ class Program {
 
   void InsertOp(Operation* op);
 
-  std::unordered_map<StrAttribute, Parameter*> parameters() const {
+  std::unordered_map<StrAttribute, std::unique_ptr<Parameter>> parameters()
+      const {
     return parameters_;
   }
 
   Parameter* GetParameter(std::string name) const;
 
-  void SetParameter(std::string name, Parameter* parameter);
+  void SetParameter(std::string name, std::unique_ptr<Parameter> parameter);
 
  private:
   std::list<Operation*> ops_;
-
-  std::unordered_map<StrAttribute, Parameter*> parameters_;
+  std::unordered_map<StrAttribute, std::unique_ptr<Parameter>> parameters_;
 };
 
 }  // namespace ir

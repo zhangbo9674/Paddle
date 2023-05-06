@@ -26,15 +26,16 @@ Parameter* Program::GetParameter(std::string name) const {
   ir::IrContext* ctx = ir::IrContext::Instance();
   ir::StrAttribute parameter_name = ir::StrAttribute::get(ctx, name);
   if (parameters_.count(parameter_name) != 0) {
-    return parameters_.at(parameter_name);
+    return parameters_.at(parameter_name).get();
   }
   return nullptr;
 }
 
-void Program::SetParameter(std::string name, Parameter* parameter) {
+void Program::SetParameter(std::string name,
+                           std::unique_ptr<Parameter> parameter) {
   ir::IrContext* ctx = ir::IrContext::Instance();
   ir::StrAttribute parameter_name = ir::StrAttribute::get(ctx, name);
-  parameters_.insert({parameter_name, parameter});
+  parameters_.emplace(parameter_name, parameter);
 }
 
 }  // namespace ir

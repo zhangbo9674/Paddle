@@ -13,12 +13,32 @@
 // limitations under the License.
 
 #include "paddle/fluid/paddle_dialect/paddle_dialect.h"
-#include <iostream>
+#include "paddle/fluid/framework/variable.h"
 #include "paddle/ir/dialect_interface.h"
+#include "paddle/ir/parameter.h"
+#include "paddle/phi/core/dense_tensor.h"
 
 namespace paddle {
 namespace dialect {
-PaddleDialect::PaddleDialect(ir::IrContext *context)
+class ParameterConvertInterface
+    : public ir::DialectInterface::Base<ParameterConvertInterface> {
+ public:
+  explicit ParameterConvertInterface(ir::Dialect* dialect) : Base(dialect) {}
+
+  paddle::framework::Variable* ParameterToVariable(ir::Parameter* parameter) {
+    // switch parameter.type()
+    // new 一个 DenseTensor, 初始化一个 Variable并返回
+    return nullptr;
+  }
+
+  ir::Parameter* VariableToParameter(paddle::framework::Variable* variable) {
+    // switch Variable.type
+    // new 一个 Parameter，返回这个指针
+    return nullptr;
+  }
+};
+
+PaddleDialect::PaddleDialect(ir::IrContext* context)
     : ir::Dialect(name(), context, ir::TypeId::get<PaddleDialect>()) {
   initialize();
 }
@@ -27,7 +47,7 @@ void PaddleDialect::initialize() {
   // RegisterTypes<GET_BUILT_IN_TYPE_LIST>();
   // RegisterAttributes<GET_BUILT_IN_ATTRIBUTE_LIST>();
   // RegisterOps<GET_BUILT_IN_OP_LIST>();
-  std::cout << "initialize dialect" << std::endl;
+  RegisterInterfaces<ParameterConvertInterface>();
 }
 
 }  // namespace dialect

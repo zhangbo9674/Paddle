@@ -22,18 +22,46 @@ namespace ir {
 ///
 class Parameter {
  public:
-  TypeId type() const { return type_; }
+  Parameter(void* data, size_t size, ir::Type type) {
+    data_ = malloc(size);
+    memcpy(data_, data, size);
+    size_ = size;
+    type_ = type;
+  }
+
+  Parameter(const Parameter& param) {
+    data_ = malloc(param.size_);
+    memcpy(data_, param.data_, param.size_);
+    size_ = param.size_;
+    type_ = param.type_;
+  }
+
+  Parameter& operator=(const Parameter& param) {
+    data_ = malloc(param.size_);
+    memcpy(data_, param.data_, param.size_);
+    size_ = param.size_;
+    type_ = param.type_;
+    return *this;
+  }
+
+  ~Parameter() { free(data_); }
+
+  Type type() const { return type_; }
 
   void* data() const { return data_; }
 
   bool is_mutable() const { return is_mutable_; }
 
- private:
-  TypeId type_;
+  void set_mutable() { is_mutable_ = true; }
 
+ private:
   void* data_;
 
-  bool is_mutable_;
+  size_t size_;
+
+  Type type_;
+
+  bool is_mutable_ = false;
 };
 
 }  // namespace ir
