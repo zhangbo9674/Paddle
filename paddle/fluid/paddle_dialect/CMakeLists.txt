@@ -1,6 +1,8 @@
 set(PD_DIALECT_SOURCE_DIR "${PADDLE_SOURCE_DIR}/paddle/fluid/paddle_dialect")
 set(PD_DIALECT_BINARY_DIR "${PADDLE_BINARY_DIR}/paddle/fluid/paddle_dialect")
 
+add_subdirectory(auto_code_generator)
+
 file(GLOB PD_DIALECT_SRCS "*.cc")
 
 cc_library(
