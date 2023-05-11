@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "paddle/fluid/paddle_dialect/dialect.h"
+#include "paddle/fluid/dialect/pd_dialect.h"
+#include "paddle/fluid/dialect/pd_type.h"
+#include "paddle/fluid/dialect/utils.h"
 #include "paddle/fluid/framework/convert_utils.h"
 #include "paddle/fluid/framework/data_type.h"
-#include "paddle/fluid/paddle_dialect/type.h"
-#include "paddle/fluid/paddle_dialect/utils.h"
 #include "paddle/ir/builtin_type.h"
 #include "paddle/ir/dialect_interface.h"
 #include "paddle/phi/core/dense_tensor.h"
@@ -56,7 +56,7 @@ ParameterConvertInterface::ParameterToVariable(ir::Parameter* parameter) {
   }
 }
 
-ir::Parameter* ParameterConvertInterface::VariableToParameter(
+std::unique_ptr<ir::Parameter> ParameterConvertInterface::VariableToParameter(
     paddle::framework::Variable* var) {
   if (var->IsType<phi::DenseTensor>()) {
     phi::DenseTensor* tensor = var->GetMutable<phi::DenseTensor>();
@@ -74,9 +74,10 @@ ir::Parameter* ParameterConvertInterface::VariableToParameter(
     void* data = tensor->data();
     ir::Type dense_tensor_type =
         DenseTensorType::get(ctx, data_type, dims, data_layout, lod, offset);
-    return new ir::Parameter(data,
-                             tensor->numel() * phi::SizeOf(tensor->dtype()),
-                             dense_tensor_type);
+    return std::make_unique<ir::Parameter>(
+        data,
+        tensor->numel() * phi::SizeOf(tensor->dtype()),
+        dense_tensor_type);
   } else {
     return nullptr;
   }
