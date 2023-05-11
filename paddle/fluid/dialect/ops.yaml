@@ -1,0 +1,110 @@
+# conv2d_grad
+
+# feed
+
+# batch_norm_grad
+
+# relu_grad
+
+# elementwise_add
+
+# elementwise_add_grad
+
+# pool2d_grad
+
+# flatten_contiguous_range
+
+# flatten_contiguous_range_grad
+
+# matmul_v2
+
+# matmul_v2_grad
+
+# reshape2
+
+# softmax_with_cross_entropy
+
+# softmax_with_cross_entropy_grad
+
+# reduce_mean
+
+# reduce_mean_grad
+
+# top_k_v2
+
+# scale
+
+# fill_constant
+
+# fetch_v2
+
+- op : accuracy
+  args : (Tensor x, Tensor indices, Tensor label)
+  output : Tensor(accuracy), Tensor(correct), Tensor(total)
+  infer_meta :
+    func : AccuracyInferMeta
+  kernel :
+    func : accuracy
+    data_type : x
+
+- op : batch_norm
+  args : (Tensor x, Tensor mean, Tensor variance, Tensor scale, Tensor bias, bool is_test, float momentum, float epsilon, str data_layout, bool use_global_stats, bool trainable_statistics)
+  output : Tensor(out), Tensor(mean_out), Tensor(variance_out), Tensor(saved_mean), Tensor(saved_variance), Tensor(reserve_space)
+  infer_meta:
+    func : BatchNormInferMeta
+  kernel :
+    func : batch_norm
+    data_type : x
+  view : (mean -> mean_out), (variance -> variance_out)
+  backward : batch_norm_grad
+
+- op : conv2d
+  args : (Tensor input, Tensor filter, int[] strides, int[] paddings, str padding_algorithm, int[] dilations, int groups, str data_format)
+  output : Tensor
+  infer_meta :
+    func : ConvInferMeta
+  kernel :
+    func : conv2d
+  backward : conv2d_grad
+
+- op : merged_momentum_
+  args : (Tensor[] param, Tensor[] grad, Tensor[] velocity, Tensor[] learning_rate, Tensor[] master_param, float mu, bool use_nesterov = false, str[] regularization_method = {}, float[] regularization_coeff = {}, bool multi_precision = false, float rescale_grad = 1.0f)
+  output : Tensor[](param_out){param.size()}, Tensor[](velocity_out){param.size()}, Tensor[](master_param_out){param.size()}
+  infer_meta :
+    func : MergedMomentumInferMeta
+  kernel :
+    func : merged_momentum
+    data_type : param
+  optional: master_param, master_param_out
+  inplace : (param -> param_out), (velocity -> velocity_out), (master_param -> master_param_out)
+
+- op : pool2d
+  args : (Tensor x, IntArray kernel_size, int[] strides, int[] paddings, bool ceil_mode, bool exclusive, str data_format, str pooling_type, bool global_pooling, bool adaptive, str padding_algorithm)
+  output : Tensor(out)
+  infer_meta :
+    func : Pool2DInferMeta
+    param : [x, kernel_size, strides, paddings, ceil_mode, exclusive, data_format, pooling_type, global_pooling, adaptive, padding_algorithm]
+  kernel :
+    func : pool2d
+    param : [x, kernel_size, strides, paddings, ceil_mode, exclusive, data_format, pooling_type, global_pooling, adaptive, padding_algorithm]
+  backward : pool2d_grad
+
+- op : relu
+  args : (Tensor x)
+  output : Tensor(out)
+  infer_meta :
+    func : UnchangedInferMeta
+  kernel :
+    func : relu
+  inplace : (x -> out)
+  backward : relu_grad
+
+- op : sum
+  args : (Tensor x, IntArray axis={}, DataType dtype=DataType::UNDEFINED, bool keepdim=false)
+  output : Tensor(out)
+  infer_meta :
+    func : SumInferMeta
+  kernel :
+    func : sum
+    data_type : x
+  backward : sum_grad

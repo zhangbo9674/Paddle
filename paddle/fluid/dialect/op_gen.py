@@ -15,6 +15,8 @@
 import argparse
 import os
 
+import yaml
+
 # ===========================
 fake_op_name = "FakeOp"
 fake_op_h = """
@@ -35,7 +37,7 @@ class FakeOp1 : public ir::Op<FakeOp1> {
  public:
   using Op::Op;
   static const char *name() { return "Fake1"; }
-  static const char* attributes_name_[];
+  static const char *attributes_name_[];
   static uint32_t attributes_num() { return 1; }
 };
 """
@@ -64,6 +66,7 @@ namespace {namespace} {{
 {input}
 }} // namespace {namespace}
 """
+
 H_FILE_TEMPLATE = """
 #pragma once
 
@@ -71,15 +74,42 @@ H_FILE_TEMPLATE = """
 
 {input}
 """
+
 CC_FILE_TEMPLATE = """
 #include "{h_file}"
 
 {input}
 """
 
+OP_DECLARE_0_ATTRIBUTES_TEMPLATE = """
+class {op_name}Op : public ir::Op<{op_name}{interfaces}{traits}> {{
+ public:
+  using Op::Op;
+  static const char *name() {{ return "{op_name}"; }}
+  static const char **attributes_name_;
+  static uint32_t attributes_num() {{ return 0; }}
+}};
+"""
+OP_DECLARE_N_ATTRIBUTES_TEMPLATE = """
+class {op_name}Op : public ir::Op<{op_name}{interfaces}{traits}> {{
+ public:
+  using Op::Op;
+  static const char *name() {{ return "{op_name}"; }}
+  static const char *attributes_name_[];
+  static uint32_t attributes_num() {{ return {attribute_num}; }}
+}};
+"""
+
+OP_DEFINED_0_ATTRIBUTES_TEMPLATE = """
+const char **{op_name}Op::attributes_name_ = nullptr;
+"""
+OP_DEFINED_N_ATTRIBUTES_TEMPLATE = """
+const char *{op_name}Op::attributes_name_[] = {{ {attribute_names} }};
+"""
+
 
 # Generate files
-def GenerateOpDefFile(header_file, source_file, namespaces):
+def GenerateOpDefFile(api_yaml_files, header_file, source_file, namespaces):
     # (1) Delete existing old files: pd_op.h.tmp, pd_op.cc.tmp
     if os.path.exists(header_file):
         os.remove(header_file)
@@ -96,6 +126,14 @@ def GenerateOpDefFile(header_file, source_file, namespaces):
     op_declare_list.append(fake_op_h1)
     op_defined_list.append(fake_op_cc)
     op_defined_list.append(fake_op_cc1)
+
+    ops_yaml = []
+    for each_api_yaml in api_yaml_files:
+        with open(each_api_yaml, 'r') as f:
+            api_list = yaml.load(f, Loader=yaml.FullLoader)
+            if api_list:
+                ops_yaml.extend(api_list)
+    print("ops_yaml: \n", ops_yaml)
 
     # (3) Generate head file str
     head_file_str = """\n#define GET_PD_DIALECT_OP_LIST {}\n""".format(
@@ -129,7 +167,7 @@ def GenerateOpDefFile(header_file, source_file, namespaces):
 if __name__ == "__main__":
     args = ParseArguments()
 
-    api_yaml = args.api_yaml.split(",")
+    api_yaml_files = args.api_yaml.split(",")
     header_file = args.op_header_file
     source_file = args.op_source_file
     if args.namespaces is not None:
@@ -137,4 +175,4 @@ if __name__ == "__main__":
     else:
         namespaces = []
 
-    GenerateOpDefFile(header_file, source_file, namespaces)
+    GenerateOpDefFile(api_yaml_files, header_file, source_file, namespaces)
