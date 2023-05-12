@@ -17,7 +17,7 @@ add_custom_command(
   OUTPUT ${op_header_file} ${op_source_file}
   COMMAND ${PYTHON_EXECUTABLE} -m pip install pyyaml
   COMMAND
-    ${PYTHON_EXECUTABLE} ${op_gen_file} --api_yaml ${api_yaml_file}
+    ${PYTHON_EXECUTABLE} ${op_gen_file} --op_yaml ${api_yaml_file}
     ${legacy_api_yaml_file} --op_header_file ${op_header_file_tmp}
     --op_source_file ${op_source_file_tmp} --namespaces ${op_namespace}
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${op_header_file_tmp}
