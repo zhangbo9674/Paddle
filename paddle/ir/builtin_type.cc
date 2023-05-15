@@ -12,23 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "paddle/ir/builtin_attribute.h"
+#include "paddle/ir/builtin_type.h"
 
 namespace ir {
-std::string StrAttribute::data() const { return storage()->GetAsKey(); }
-
-uint32_t StrAttribute::size() const { return storage()->GetAsKey().size(); }
-
-bool BoolAttribute::data() const { return storage()->GetAsKey(); }
-
-float FloatAttribute::data() const { return storage()->GetAsKey(); }
-
-double DoubleAttribute::data() const { return storage()->GetAsKey(); }
-
-int IntAttribute::data() const { return storage()->GetAsKey(); }
-
-int32_t Int32_tAttribute::data() const { return storage()->GetAsKey(); }
-
-int64_t Int64_tAttribute::data() const { return storage()->GetAsKey(); }
+Type VectorType::value_type() const { return storage()->GetAsKey(); }
 
 }  // namespace ir

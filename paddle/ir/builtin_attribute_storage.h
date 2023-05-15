@@ -21,6 +21,29 @@
 #include "paddle/ir/attribute.h"
 
 namespace ir {
+
+#define DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(concrete_storage, base_type) \
+  struct concrete_storage : public ir::AttributeStorage {                \
+    using ParamKey = bool;                                               \
+                                                                         \
+    explicit concrete_storage(const ParamKey &key) { data_ = key; }      \
+                                                                         \
+    static concrete_storage *Construct(ParamKey key) {                   \
+      return new concrete_storage(key);                                  \
+    }                                                                    \
+                                                                         \
+    static std::size_t HashValue(const ParamKey &key) {                  \
+      return std::hash<base_type>()(key);                                \
+    }                                                                    \
+                                                                         \
+    bool operator==(const ParamKey &key) const { return data_ == key; }  \
+                                                                         \
+    ParamKey GetAsKey() const { return data_; }                          \
+                                                                         \
+   private:                                                              \
+    ParamKey data_;                                                      \
+  };
+
 ///
 /// \brief Define Parameteric AttributeStorage for StrAttribute.
 ///
@@ -53,5 +76,12 @@ struct StrAttributeStorage : public ir::AttributeStorage {
   char *data_;
   uint32_t size_;
 };
+
+DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(BoolAttributeStorage, bool);
+DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(FloatAttributeStorage, float);
+DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(DoubleAttributeStorage, double);
+DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(IntAttributeStorage, int);
+DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(Int32_tAttributeStorage, int32_t);
+DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(Int64_tAttributeStorage, int64_t);
 
 }  // namespace ir

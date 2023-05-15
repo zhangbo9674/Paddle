@@ -33,6 +33,6 @@ file(GLOB PD_DIALECT_SRCS "*.cc")
 
 cc_library(
   pd_dialect
-  SRCS ${PD_DIALECT_SRCS} ${op_source_file}
+  SRCS ${PD_DIALECT_SRCS}
   DEPS new_ir framework_proto dense_tensor)
 target_include_directories(pd_dialect PRIVATE ${PD_DIALECT_BINARY_DIR})

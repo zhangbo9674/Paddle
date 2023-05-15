@@ -107,7 +107,7 @@ INPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<{standard}>
   """
 INPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<ir::VectorType>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
-  PADDLE_ENFORCE_EQ(inputs[{index}].InnerType().isa<{standard}>(), true,
+  PADDLE_ENFORCE_EQ(inputs[{index}].value_type().isa<{standard}>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
   """
 OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard}>(), true,
@@ -115,7 +115,7 @@ OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard
   """
 OUTPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<ir::VectorType>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
-  PADDLE_ENFORCE_EQ(outputs[{index}].InnerType().isa<{standard}>(), true,
+  PADDLE_ENFORCE_EQ(outputs[{index}].value_type().isa<{standard}>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
   """
 # Example: attribute_name=xxx
@@ -153,8 +153,8 @@ class OpInfo(BaseAPI):
             'const paddle::optional<Tensor>&': 'paddle::dialect::DenseTensorType',
             'const paddle::optional<std::vector<Tensor>>&': 'ir::VectorType<paddle::dialect::DenseTensorType>',
             'paddle::optional<int>': 'ir::IntType',
-            'paddle::optional<int32_t>': 'ir::Int32Type',
-            'paddle::optional<int64_t>': 'ir::Int64Type',
+            'paddle::optional<int32_t>': 'ir::Int32_tType',
+            'paddle::optional<int64_t>': 'ir::Int64_tType',
             'paddle::optional<float>': 'ir::FloatType',
             'paddle::optional<double>': 'ir::DoubleType',
             'paddle::optional<bool>': 'ir::BoolType',
@@ -168,8 +168,8 @@ class OpInfo(BaseAPI):
             'const Scalar&': 'paddle::dialect::ScalarAttribute',
             'const std::vector<phi::Scalar>&': 'ir::VectorAttribute<paddle::dialect::ScalarAttribute>',
             'int': 'ir::IntAttribute',
-            'int32_t': 'ir::Int32Attribute',
-            'int64_t': 'ir::Int64Attribute',
+            'int32_t': 'ir::Int32_tAttribute',
+            'int64_t': 'ir::Int64_tAttribute',
             'long': 'ir::LongAttribute',
             'size_t': 'ir::Size_tAttribute',
             'float': 'ir::FloatAttribute',
@@ -182,7 +182,7 @@ class OpInfo(BaseAPI):
             'const Place&': 'paddle::dialect::PlaceAttribute',
             'DataLayout': 'paddle::dialect::DataLayoutAttribute',
             'DataType': 'paddle::dialect::DataTypeAttribute',
-            'const std::vector<int64_t>&': 'ir::VectorAttribute<ir::Int64Attribute>',
+            'const std::vector<int64_t>&': 'ir::VectorAttribute<ir::Int64_tAttribute>',
             'const std::vector<int>&': 'ir::VectorAttribute<ir::IntAttribute>',
         }
 
@@ -315,7 +315,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
             inputs_type_check_str = ""
         for idx in range(len(op_inputs_type)):
             input_type = op_inputs_type[idx]
-            if input_type.startswith("ir:VectorType"):
+            if input_type.startswith("ir::VectorType"):
                 inner_type = input_type[14:-1]
                 inputs_type_check_str += INPUT_VECTORTYPE_CHECK_TEMPLATE.format(
                     index=idx, standard=inner_type
@@ -355,7 +355,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
             attribute_name = op_attributes_name[idx]
             attribute_type = op_attributes_type[idx]
             if attribute_type.startswith("ir::VectorAttribute"):
-                inner_attribute = attribute_type[18:-1]
+                inner_attribute = attribute_type[19:-1]
                 attributes_check_str += ATTRIBUTE_VECTOR_CHECK_TEMPLATE.format(
                     attribute_name=attribute_name, standard=attribute_type
                 )
