@@ -87,6 +87,8 @@ const char *{op_name}Op::attributes_name_[{attribute_num}] = {{ {attribute_names
 
 OP_VERIFY_TEMPLATE = """
 void {op_name}Op::verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attribute) {{
+  VLOG(4) << "Verifying inputs, outputs and attributes for: {op_name}.";
+
   // Verify inputs type:
   PADDLE_ENFORCE_EQ(inputs.size(), {inputs_size}, paddle::platform::errors::InvalidArgument("The size %d of inputs must be equal to {inputs_size}.", inputs.size()));
   {inputs_type_check}
