@@ -39,26 +39,30 @@ def ParseArguments():
 
 
 # string template for pd_op.h
-NAMESPACE_GARD_TEMPLATE = """
-namespace {namespace} {{
+NAMESPACE_GARD_TEMPLATE = """namespace {namespace} {{
 {input}
-}} // namespace {namespace}
-"""
+}} // namespace {namespace}"""
 
-H_FILE_TEMPLATE = """
-#pragma once
+H_FILE_TEMPLATE = """#pragma once
 
 #include "paddle/ir/op_base.h"
 
 {input}
 """
 
-CC_FILE_TEMPLATE = """
-#include "{h_file}"
-#include "paddle/phi/core/enforce.h"
+CC_FILE_TEMPLATE = """#include "{h_file}"
+#include "paddle/fluid/dialect/pd_type.h"
+#include "paddle/ir/builtin_attribute.h"
+#include "paddle/ir/builtin_type.h"
 #include "paddle/ir/ir_context.h"
+#include "paddle/phi/core/enforce.h"
 
 {input}
+"""
+
+GET_PD_DIALECT_OP_LIST_TEMPALTE = """
+// All defined pd_dialect operations in this file.
+#define GET_PD_DIALECT_OP_LIST {}
 """
 
 OP_DECLARE_ATTRIBUTES_TEMPLATE = """
@@ -68,7 +72,7 @@ class {op_name}Op : public ir::Op<{op_name}Op{interfaces}{traits}> {{
   static const char *name() {{ return "{op_name}Op"; }}
   {attribute_declare}
   static constexpr uint32_t attributes_num = {attribute_num};
-  static void verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, ir::DictionaryAttribute attribute);
+  static void verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attribute);
 }};
 """
 op_0_attribute_declare_str = "static const char **attributes_name_;"
@@ -82,49 +86,34 @@ const char *{op_name}Op::attributes_name_[{attribute_num}] = {{ {attribute_names
 """
 
 OP_VERIFY_TEMPLATE = """
-void {op_name}Op::verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, ir::DictionaryAttribute attributes) {{
-  // verify inputs
-  PADDLE_ENFORCE_EQ(inputs.size(), {inputs_size},
-                    paddle::platform::errors::InvalidArgument("The size %d of inputs must be equal to {inputs_size}.", inputs.size()));
+void {op_name}Op::verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attribute) {{
+  // Verify inputs type:
+  PADDLE_ENFORCE_EQ(inputs.size(), {inputs_size}, paddle::platform::errors::InvalidArgument("The size %d of inputs must be equal to {inputs_size}.", inputs.size()));
   {inputs_type_check}
-  // verify outputs
-  PADDLE_ENFORCE_EQ(outputs.size(), {outputs_size},
-                    paddle::platform::errors::InvalidArgument("The size %d of inputs must be equal to {outputs_size}.", outputs.size()));
+  // Verify outputs type:
+  PADDLE_ENFORCE_EQ(outputs.size(), {outputs_size}, paddle::platform::errors::InvalidArgument("The size %d of inputs must be equal to {outputs_size}.", outputs.size()));
   {outputs_type_check}
-  // verify attributes
+  // Verify if attributes contain attribute name in attributes_name_:
   {attributes_check}
 }}
 """
 # Example: index=1, standard=paddle::dialect::DenseTensorType
-INPUT_TYPE_CHECK_TEMPLATE = """
-  PADDLE_ENFORCE_EQ(inputs[{index}].isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th input."));
-"""
-INPUT_VECTORTYPE_CHECK_TEMPLATE = """
-  PADDLE_ENFORCE_EQ(inputs[{index}].isa<ir::VectorType>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th input."));
+INPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th input."));
+  """
+INPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<ir::VectorType>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th input."));
   PADDLE_ENFORCE_EQ(inputs[{index}].InnerType().isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th input."));
-"""
-OUTPUT_TYPE_CHECK_TEMPLATE = """
-  PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th output."));
-"""
-OUTPUT_VECTORTYPE_CHECK_TEMPLATE = """
-  PADDLE_ENFORCE_EQ(outputs[{index}].isa<ir::VectorType>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th output."));
+  """
+OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th output."));
+  """
+OUTPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<ir::VectorType>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th output."));
   PADDLE_ENFORCE_EQ(outputs[{index}].InnerType().isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th output."));
-"""
+  """
 # Example: attribute_name=xxx
-ATTRIBUTE_CHECK_TEMPLATE = """
-  PADDLE_ENFORCE_EQ(attributes.GetValue(ir::StrAttribute::get(ir::IrContext::Instance(), std::string("{attribute_name}"))), true,
-                    paddle::platform::errors::InvalidArgument("Missing necessary attribute: {attribute_name}."));
-  PADDLE_ENFORCE_EQ(attributes.GetValue(ir::StrAttribute::get(ir::IrContext::Instance(), std::string("{attribute_name}"))).isa<{standard}>(), true,
-                    paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
-"""
-ATTRIBUTE_VECTOR_CHECK_TEMPLATE = """
-  PADDLE_ENFORCE_EQ(attributes.GetValue(ir::StrAttribute::get(ir::IrContext::Instance(), std::string("{attribute_name}"))), true,
-                    paddle::platform::errors::InvalidArgument("Missing necessary attribute: {attribute_name}."));
-  PADDLE_ENFORCE_EQ(attributes.GetValue(ir::StrAttribute::get(ir::IrContext::Instance(), std::string("{attribute_name}"))).isa<ir::VectorAttribute>(), true,
-                    paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
-  PADDLE_ENFORCE_EQ(attributes.GetValue(ir::StrAttribute::get(ir::IrContext::Instance(), std::string("{attribute_name}"))).InnerAttribute().isa<{standard}>(), true,
-                    paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
-"""
+ATTRIBUTE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
+  """
+ATTRIBUTE_VECTOR_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<ir::VectorAttribute>(), true, paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
+  PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").InnerAttribute().isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
+  """
 
 
 class OpInfo(BaseAPI):
@@ -144,12 +133,12 @@ class OpInfo(BaseAPI):
 
         # input/output Paddle Type -> ir Type
         self.type_map = {
-            'Tensor': 'paddle::dialect::DenseTensor',
-            'std::vector<Tensor>': 'ir:VectorType<paddle::dialect::DenseTensor>',
-            'const Tensor&': 'paddle::dialect::DenseTensor',
-            'const std::vector<Tensor>&': 'ir:VectorType<paddle::dialect::DenseTensor>',
-            'const paddle::optional<Tensor>&': 'paddle::dialect::DenseTensor',
-            'const paddle::optional<std::vector<Tensor>>&': 'ir:VectorType<paddle::dialect::DenseTensor>',
+            'Tensor': 'paddle::dialect::DenseTensorType',
+            'std::vector<Tensor>': 'ir:VectorType<paddle::dialect::DenseTensorType>',
+            'const Tensor&': 'paddle::dialect::DenseTensorType',
+            'const std::vector<Tensor>&': 'ir:VectorType<paddle::dialect::DenseTensorType>',
+            'const paddle::optional<Tensor>&': 'paddle::dialect::DenseTensorType',
+            'const paddle::optional<std::vector<Tensor>>&': 'ir:VectorType<paddle::dialect::DenseTensorType>',
             'paddle::optional<int>': 'ir::IntType',
             'paddle::optional<int32_t>': 'ir::Int32Type',
             'paddle::optional<int64_t>': 'ir::Int64Type',
@@ -162,9 +151,9 @@ class OpInfo(BaseAPI):
         }
         # attribute Paddle Type -> ir Attribute
         self.attr_type_map = {
-            'const IntArray&': 'paddle::dialect::IntArray',
-            'const Scalar&': 'paddle::dialect::Scalar',
-            'const std::vector<phi::Scalar>&': 'ir::VectorAttribute<paddle::dialect::Scalar>',
+            'const IntArray&': 'paddle::dialect::IntArrayAttribute',
+            'const Scalar&': 'paddle::dialect::ScalarAttribute',
+            'const std::vector<phi::Scalar>&': 'ir::VectorAttribute<paddle::dialect::ScalarAttribute>',
             'int': 'ir::IntAttribute',
             'int32_t': 'ir::Int32Attribute',
             'int64_t': 'ir::Int64Attribute',
@@ -179,7 +168,7 @@ class OpInfo(BaseAPI):
             'const std::vector<std::string>&': 'ir::VectorAttribute<ir::StrAttribute>',
             'const Place&': 'paddle::dialect::PlaceAttribute',
             'DataLayout': 'paddle::dialect::DataLayoutAttribute',
-            'DataType': 'paddle::dialect::DataType::Attribute',
+            'DataType': 'paddle::dialect::DataTypeAttribute',
             'const std::vector<int64_t>&': 'ir::VectorAttribute<ir::Int64Attribute>',
             'const std::vector<int>&': 'ir::VectorAttribute<ir::IntAttribute>',
         }
@@ -305,7 +294,12 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
                 attribute_names=attribute_names_str,
             )
 
-        inputs_type_check_str = ""
+        if len(op_inputs_type) == 0:
+            inputs_type_check_str = (
+                "// Inputs num is 0, not need to check inputs type."
+            )
+        else:
+            inputs_type_check_str = ""
         for idx in range(len(op_inputs_type)):
             input_type = op_inputs_type[idx]
             if input_type.startswith("ir:VectorType"):
@@ -318,7 +312,12 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
                     index=idx, standard=input_type
                 )
 
-        outputs_type_check_str = ""
+        if len(op_outputs_type) == 0:
+            outputs_type_check_str = (
+                "// Outputs num is 0, not need to check outputs type."
+            )
+        else:
+            outputs_type_check_str = ""
         for idx in range(len(op_outputs_type)):
             output_type = op_outputs_type[idx]
             if output_type.startswith("ir:VectorType"):
@@ -333,7 +332,12 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
                     index=idx, standard=output_type
                 )
 
-        attributes_check_str = ""
+        if len(op_attributes_name) == 0:
+            attributes_check_str = (
+                "// Attributes num is 0, not need to check attributes type."
+            )
+        else:
+            attributes_check_str = ""
         for idx in range(len(op_attributes_name)):
             attribute_name = op_attributes_name[idx]
             attribute_type = op_attributes_type[idx]
@@ -362,7 +366,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
         ops_defined_list.append(op_verify_str)
 
     # (3) Generate head file str
-    head_file_str = """\n#define GET_PD_DIALECT_OP_LIST {}\n""".format(
+    head_file_str = GET_PD_DIALECT_OP_LIST_TEMPALTE.format(
         ", ".join(ops_name_list)
     )  # Add GET_PD_DIALECT_OP_LIST
     head_file_str += "".join(ops_declare_list)  # Add op class
