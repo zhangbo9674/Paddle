@@ -71,8 +71,8 @@ class {op_name}Op : public ir::Op<{op_name}Op{interfaces}{traits}> {{
   using Op::Op;
   static const char *name() {{ return "{op_name}Op"; }}
   {attribute_declare}
-  static constexpr uint32_t attributes_num = {attribute_num};
-  static void verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attribute);
+  static constexpr uint32_t attributes_num_ = {attribute_num};
+  static void verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attributes);
 }};
 """
 op_0_attribute_declare_str = "static const char **attributes_name_;"
@@ -86,35 +86,46 @@ const char *{op_name}Op::attributes_name_[{attribute_num}] = {{ {attribute_names
 """
 
 OP_VERIFY_TEMPLATE = """
-void {op_name}Op::verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attribute) {{
+void {op_name}Op::verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attributes) {{
   VLOG(4) << "Verifying inputs, outputs and attributes for: {op_name}.";
 
   // Verify inputs type:
-  PADDLE_ENFORCE_EQ(inputs.size(), {inputs_size}, paddle::platform::errors::InvalidArgument("The size %d of inputs must be equal to {inputs_size}.", inputs.size()));
+  PADDLE_ENFORCE_EQ(inputs.size(), {inputs_size},
+                    phi::errors::PreconditionNotMet("The size %d of inputs must be equal to {inputs_size}.", inputs.size()));
   {inputs_type_check}
   // Verify outputs type:
-  PADDLE_ENFORCE_EQ(outputs.size(), {outputs_size}, paddle::platform::errors::InvalidArgument("The size %d of inputs must be equal to {outputs_size}.", outputs.size()));
+  PADDLE_ENFORCE_EQ(outputs.size(), {outputs_size},
+                    phi::errors::PreconditionNotMet("The size %d of inputs must be equal to {outputs_size}.", outputs.size()));
   {outputs_type_check}
   // Verify if attributes contain attribute name in attributes_name_:
   {attributes_check}
 }}
 """
 # Example: index=1, standard=paddle::dialect::DenseTensorType
-INPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th input."));
+INPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<{standard}>(), true,
+                    phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
   """
-INPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<ir::VectorType>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th input."));
-  PADDLE_ENFORCE_EQ(inputs[{index}].InnerType().isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th input."));
+INPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<ir::VectorType>(), true,
+                    phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
+  PADDLE_ENFORCE_EQ(inputs[{index}].InnerType().isa<{standard}>(), true,
+                    phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
   """
-OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th output."));
+OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard}>(), true,
+                    phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
   """
-OUTPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<ir::VectorType>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th output."));
-  PADDLE_ENFORCE_EQ(outputs[{index}].InnerType().isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type validation failed for the {index}th output."));
+OUTPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<ir::VectorType>(), true,
+                    phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
+  PADDLE_ENFORCE_EQ(outputs[{index}].InnerType().isa<{standard}>(), true,
+                    phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
   """
 # Example: attribute_name=xxx
-ATTRIBUTE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
+ATTRIBUTE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<{standard}>(), true,
+                    phi::errors::PreconditionNotMet("Type of attribute: {attribute_name} is not right."));
   """
-ATTRIBUTE_VECTOR_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<ir::VectorAttribute>(), true, paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
-  PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").InnerAttribute().isa<{standard}>(), true, paddle::platform::errors::InvalidArgument("Type of attribute: {attribute_name} is not right."));
+ATTRIBUTE_VECTOR_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<ir::VectorAttribute>(), true,
+                    phi::errors::PreconditionNotMet("Type of attribute: {attribute_name} is not right."));
+  PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").InnerAttribute().isa<{standard}>(), true,
+                    phi::errors::PreconditionNotMet("Type of attribute: {attribute_name} is not right."));
   """
 
 
@@ -136,11 +147,11 @@ class OpInfo(BaseAPI):
         # input/output Paddle Type -> ir Type
         self.type_map = {
             'Tensor': 'paddle::dialect::DenseTensorType',
-            'std::vector<Tensor>': 'ir:VectorType<paddle::dialect::DenseTensorType>',
+            'std::vector<Tensor>': 'ir::VectorType<paddle::dialect::DenseTensorType>',
             'const Tensor&': 'paddle::dialect::DenseTensorType',
-            'const std::vector<Tensor>&': 'ir:VectorType<paddle::dialect::DenseTensorType>',
+            'const std::vector<Tensor>&': 'ir::VectorType<paddle::dialect::DenseTensorType>',
             'const paddle::optional<Tensor>&': 'paddle::dialect::DenseTensorType',
-            'const paddle::optional<std::vector<Tensor>>&': 'ir:VectorType<paddle::dialect::DenseTensorType>',
+            'const paddle::optional<std::vector<Tensor>>&': 'ir::VectorType<paddle::dialect::DenseTensorType>',
             'paddle::optional<int>': 'ir::IntType',
             'paddle::optional<int32_t>': 'ir::Int32Type',
             'paddle::optional<int64_t>': 'ir::Int64Type',
@@ -322,7 +333,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
             outputs_type_check_str = ""
         for idx in range(len(op_outputs_type)):
             output_type = op_outputs_type[idx]
-            if output_type.startswith("ir:VectorType"):
+            if output_type.startswith("ir::VectorType"):
                 inner_type = output_type[14:-1]
                 outputs_type_check_str += (
                     OUTPUT_VECTORTYPE_CHECK_TEMPLATE.format(
@@ -343,7 +354,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
         for idx in range(len(op_attributes_name)):
             attribute_name = op_attributes_name[idx]
             attribute_type = op_attributes_type[idx]
-            if attribute_type.startswith("ir:VectorAttribute"):
+            if attribute_type.startswith("ir::VectorAttribute"):
                 inner_attribute = attribute_type[18:-1]
                 attributes_check_str += ATTRIBUTE_VECTOR_CHECK_TEMPLATE.format(
                     attribute_name=attribute_name, standard=attribute_type
@@ -362,7 +373,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
             attributes_check=attributes_check_str,
         )
 
-        ops_name_list.append(op_name)
+        ops_name_list.append(op_name + "Op")
         ops_declare_list.append(op_declare_str)
         ops_defined_list.append(op_defined_str)
         ops_defined_list.append(op_verify_str)

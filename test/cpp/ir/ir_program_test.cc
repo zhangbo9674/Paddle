@@ -33,7 +33,7 @@ class AddOp : public ir::Op<AddOp> {
   using Op::Op;
   static const char *name() { return "Add"; }
   static const char **attributes_name_;
-  static uint32_t attributes_num() { return 0; }
+  static constexpr uint32_t attributes_num_ = 0;
 };
 const char **AddOp::attributes_name_ = nullptr;
 
