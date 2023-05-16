@@ -38,6 +38,12 @@ class Program {
 
   size_t parameters_num() const { return parameters_.size(); }
 
+  ///
+  /// \brief Insert the Operation* constructed by Operation::create(...) into
+  /// this Program. NOTE: At this time, the memory management permission of
+  /// Operation* will be owned by this Program. The user does not need to call
+  /// Operation::destroy() manually
+  ///
   void InsertOp(Operation* op);
 
   Parameter* GetParameter(std::string name) const;
@@ -45,7 +51,7 @@ class Program {
   void SetParameter(std::string name, std::unique_ptr<Parameter>&& parameter);
 
  private:
-  std::list<Operation*> ops_;
+  std::list<Operation*> ops_;  // owned
 
   std::unordered_map<std::string, std::unique_ptr<Parameter>> parameters_;
 };
