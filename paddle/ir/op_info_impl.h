@@ -101,7 +101,7 @@ class OpInfoImpl {
     size_t interfaces_num =
         std::tuple_size<typename ConcreteOp::InterfaceList>::value;
     size_t traits_num = std::tuple_size<typename ConcreteOp::TraitList>::value;
-    size_t attributes_num = ConcreteOp::attributes_num_;
+    size_t attributes_num = ConcreteOp::attributes_num;
     VLOG(4) << "Create OpInfoImpl with: " << interfaces_num << " interfaces, "
             << traits_num << " traits, " << attributes_num << " attributes.";
     size_t base_size = sizeof(std::pair<ir::TypeId, void *>) * interfaces_num +
@@ -139,7 +139,7 @@ class OpInfoImpl {
     OpInfoImpl *op_info =
         new (p_opinfo_impl) OpInfoImpl(interfaces_num,
                                        traits_num,
-                                       ConcreteOp::attributes_name_,
+                                       ConcreteOp::attributes_name,
                                        attributes_num,
                                        ir::TypeId::get<ConcreteOp>(),
                                        ConcreteOp::name(),

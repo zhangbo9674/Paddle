@@ -15,8 +15,8 @@
 #include "paddle/ir/builtin_op.h"
 
 namespace ir {
-const char *GetParameterOp::attributes_name_[] = {"parameter_name"};
+const char *GetParameterOp::attributes_name[] = {"parameter_name"};
 
-const char *SetParameterOp::attributes_name_[] = {"parameter_name"};
+const char *SetParameterOp::attributes_name[] = {"parameter_name"};
 
 }  // namespace ir

@@ -34,9 +34,9 @@ class GetParameterOp : public ir::Op<GetParameterOp> {
 
   static const char* name() { return "GetParameterOp"; }
 
-  static constexpr uint32_t attributes_num_ = 1;
+  static constexpr uint32_t attributes_num = 1;
 
-  static const char* attributes_name_[];
+  static const char* attributes_name[];
 };
 
 ///
@@ -49,9 +49,9 @@ class SetParameterOp : public ir::Op<SetParameterOp> {
 
   static const char* name() { return "SetParameterOp"; }
 
-  static constexpr uint32_t attributes_num_ = 1;
+  static constexpr uint32_t attributes_num = 1;
 
-  static const char* attributes_name_[];
+  static const char* attributes_name[];
 };
 
 }  // namespace ir

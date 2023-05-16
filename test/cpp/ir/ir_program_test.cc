@@ -32,10 +32,10 @@ class AddOp : public ir::Op<AddOp> {
  public:
   using Op::Op;
   static const char *name() { return "Add"; }
-  static const char **attributes_name_;
-  static constexpr uint32_t attributes_num_ = 0;
+  static const char **attributes_name;
+  static constexpr uint32_t attributes_num = 0;
 };
-const char **AddOp::attributes_name_ = nullptr;
+const char **AddOp::attributes_name = nullptr;
 
 TEST(program_test, program) {
   // (1) Init environment.

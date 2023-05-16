@@ -72,18 +72,18 @@ class {op_name}Op : public ir::Op<{op_name}Op{interfaces}{traits}> {{
   using Op::Op;
   static const char *name() {{ return "{op_name}Op"; }}
   {attribute_declare}
-  static constexpr uint32_t attributes_num_ = {attribute_num};
+  static constexpr uint32_t attributes_num = {attribute_num};
   static void verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attributes);
 }};
 """
-op_0_attribute_declare_str = "static const char **attributes_name_;"
-op_n_attribute_declare_str = "static const char *attributes_name_[{}];"
+op_0_attribute_declare_str = "static const char **attributes_name;"
+op_n_attribute_declare_str = "static const char *attributes_name[{}];"
 
 OP_0_ATTRIBUTE_DEFINED_TEMPLATE = """
-const char **{op_name}Op::attributes_name_ = nullptr;
+const char **{op_name}Op::attributes_name = nullptr;
 """
 OP_N_ATTRIBUTE_DEFINED_TEMPLATE = """
-const char *{op_name}Op::attributes_name_[{attribute_num}] = {{ {attribute_names} }};
+const char *{op_name}Op::attributes_name[{attribute_num}] = {{ {attribute_names} }};
 """
 
 OP_VERIFY_TEMPLATE = """
@@ -98,7 +98,7 @@ void {op_name}Op::verify(const std::vector<ir::Type> &inputs, const std::vector<
   PADDLE_ENFORCE_EQ(outputs.size(), {outputs_size},
                     phi::errors::PreconditionNotMet("The size %d of inputs must be equal to {outputs_size}.", outputs.size()));
   {outputs_type_check}
-  // Verify if attributes contain attribute name in attributes_name_:
+  // Verify if attributes contain attribute name in attributes_name:
   {attributes_check}
 }}
 """

@@ -67,10 +67,10 @@ class Operation1 : public ir::Op<Operation1> {
  public:
   using Op::Op;
   static const char *name() { return "Operation1"; }
-  static const char *attributes_name_[];
-  static constexpr uint32_t attributes_num_ = 2;
+  static const char *attributes_name[];
+  static constexpr uint32_t attributes_num = 2;
 };
-const char *Operation1::attributes_name_[] = {"op1_attr1", "op1_attr2"};
+const char *Operation1::attributes_name[] = {"op1_attr1", "op1_attr2"};
 
 // Define op2.
 class Operation2
@@ -78,13 +78,13 @@ class Operation2
  public:
   using Op::Op;
   static const char *name() { return "Operation2"; }
-  static const char *attributes_name_[];
-  static constexpr uint32_t attributes_num_ = 2;
+  static const char *attributes_name[];
+  static constexpr uint32_t attributes_num = 2;
   static void InferShape() {
     std::cout << "This is op2's InferShape interface." << std::endl;
   }
 };
-const char *Operation2::attributes_name_[] = {"op2_attr1", "op2_attr2"};
+const char *Operation2::attributes_name[] = {"op2_attr1", "op2_attr2"};
 
 // Define a dialect, op1 and op2 will be registered by this dialect.
 class TestDialect : public ir::Dialect {
