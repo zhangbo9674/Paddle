@@ -24,7 +24,7 @@ namespace ir {
 ///
 #define GET_BUILT_IN_ATTRIBUTE_LIST                                           \
   StrAttribute, BoolAttribute, FloatAttribute, DoubleAttribute, IntAttribute, \
-      Int32_tAttribute, Int64_tAttribute
+      Int32_tAttribute, Int64_tAttribute, ArrayAttribute
 
 class StrAttribute : public Attribute {
  public:
@@ -95,55 +95,39 @@ class Int64_tAttribute : public Attribute {
   int64_t data() const;
 };
 
+class ArrayAttribute : public Attribute {
+ public:
+  using Attribute::Attribute;
+
+  DECLARE_ATTRIBUTE_UTILITY_FUNCTOR(ArrayAttribute, ArrayAttributeStorage);
+
+  std::vector<Attribute> data() const;
+
+  size_t size() const { return data().size(); }
+
+  bool empty() const { return data().empty(); }
+
+  Attribute operator[](size_t index) const { return data()[index]; }
+};
+
 }  // namespace ir
 
 namespace std {
-template <>
-struct hash<ir::StrAttribute> {
-  std::size_t operator()(const ir::StrAttribute &obj) const {
-    return std::hash<const ir::StrAttribute::Storage *>()(obj.storage());
-  }
-};
+#define DECLARE_ATTRIBUTE_HASH_METHOD(attribute)                     \
+  template <>                                                        \
+  struct hash<attribute> {                                           \
+    std::size_t operator()(const attribute &obj) const {             \
+      return std::hash<const attribute::Storage *>()(obj.storage()); \
+    }                                                                \
+  };
 
-template <>
-struct hash<ir::BoolAttribute> {
-  std::size_t operator()(const ir::BoolAttribute &obj) const {
-    return std::hash<const ir::BoolAttribute::Storage *>()(obj.storage());
-  }
-};
+DECLARE_ATTRIBUTE_HASH_METHOD(ir::StrAttribute);
+DECLARE_ATTRIBUTE_HASH_METHOD(ir::BoolAttribute);
+DECLARE_ATTRIBUTE_HASH_METHOD(ir::FloatAttribute);
+DECLARE_ATTRIBUTE_HASH_METHOD(ir::DoubleAttribute);
+DECLARE_ATTRIBUTE_HASH_METHOD(ir::IntAttribute);
+DECLARE_ATTRIBUTE_HASH_METHOD(ir::Int32_tAttribute);
+DECLARE_ATTRIBUTE_HASH_METHOD(ir::Int64_tAttribute);
+DECLARE_ATTRIBUTE_HASH_METHOD(ir::ArrayAttribute);
 
-template <>
-struct hash<ir::FloatAttribute> {
-  std::size_t operator()(const ir::FloatAttribute &obj) const {
-    return std::hash<const ir::FloatAttribute::Storage *>()(obj.storage());
-  }
-};
-
-template <>
-struct hash<ir::DoubleAttribute> {
-  std::size_t operator()(const ir::DoubleAttribute &obj) const {
-    return std::hash<const ir::DoubleAttribute::Storage *>()(obj.storage());
-  }
-};
-
-template <>
-struct hash<ir::IntAttribute> {
-  std::size_t operator()(const ir::IntAttribute &obj) const {
-    return std::hash<const ir::IntAttribute::Storage *>()(obj.storage());
-  }
-};
-
-template <>
-struct hash<ir::Int32_tAttribute> {
-  std::size_t operator()(const ir::Int32_tAttribute &obj) const {
-    return std::hash<const ir::Int32_tAttribute::Storage *>()(obj.storage());
-  }
-};
-
-template <>
-struct hash<ir::Int64_tAttribute> {
-  std::size_t operator()(const ir::Int64_tAttribute &obj) const {
-    return std::hash<const ir::Int64_tAttribute::Storage *>()(obj.storage());
-  }
-};
 }  // namespace std

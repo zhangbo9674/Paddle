@@ -107,7 +107,7 @@ INPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<{standard}>
   """
 INPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<ir::VectorType>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
-  PADDLE_ENFORCE_EQ(inputs[{index}].value_type().isa<{standard}>(), true,
+  PADDLE_ENFORCE_EQ(inputs[{index}].element_type().isa<{standard}>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
   """
 OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard}>(), true,
@@ -115,7 +115,7 @@ OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard
   """
 OUTPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<ir::VectorType>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
-  PADDLE_ENFORCE_EQ(outputs[{index}].value_type().isa<{standard}>(), true,
+  PADDLE_ENFORCE_EQ(outputs[{index}].element_type().isa<{standard}>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
   """
 # Example: attribute_name=xxx
@@ -164,26 +164,26 @@ class OpInfo(BaseAPI):
         }
         # attribute Paddle Type -> ir Attribute
         self.attr_type_map = {
-            'const IntArray&': 'paddle::dialect::IntArrayAttribute',
+            'const IntArray&': 'paddle::dialect::Int64_tArrayAttribute',
             'const Scalar&': 'paddle::dialect::ScalarAttribute',
-            'const std::vector<phi::Scalar>&': 'ir::VectorAttribute<paddle::dialect::ScalarAttribute>',
+            'const std::vector<phi::Scalar>&': 'ir::ArrayAttribute<paddle::dialect::ScalarAttribute>',
             'int': 'ir::IntAttribute',
             'int32_t': 'ir::Int32_tAttribute',
             'int64_t': 'ir::Int64_tAttribute',
             'long': 'ir::LongAttribute',
             'size_t': 'ir::Size_tAttribute',
             'float': 'ir::FloatAttribute',
-            'const std::vector<float>&': 'ir::VectorAttribute<ir::FloatAttribute>',
+            'const std::vector<float>&': 'ir::ArrayAttribute<ir::FloatAttribute>',
             'double': 'ir::DoubleAttribute',
             'bool': 'ir::BoolAttribute',
-            'const std::vector<bool>&': 'ir::VectorAttribute<ir::BoolAttribute>',
+            'const std::vector<bool>&': 'ir::ArrayAttribute<ir::BoolAttribute>',
             'const std::string&': 'ir::StrAttribute',
-            'const std::vector<std::string>&': 'ir::VectorAttribute<ir::StrAttribute>',
+            'const std::vector<std::string>&': 'ir::ArrayAttribute<ir::StrAttribute>',
             'const Place&': 'paddle::dialect::PlaceAttribute',
             'DataLayout': 'paddle::dialect::DataLayoutAttribute',
             'DataType': 'paddle::dialect::DataTypeAttribute',
-            'const std::vector<int64_t>&': 'ir::VectorAttribute<ir::Int64_tAttribute>',
-            'const std::vector<int>&': 'ir::VectorAttribute<ir::IntAttribute>',
+            'const std::vector<int64_t>&': 'ir::ArrayAttribute<ir::Int64_tAttribute>',
+            'const std::vector<int>&': 'ir::ArrayAttribute<ir::IntAttribute>',
         }
 
     def get_op_name(self):
@@ -354,8 +354,8 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
         for idx in range(len(op_attributes_name)):
             attribute_name = op_attributes_name[idx]
             attribute_type = op_attributes_type[idx]
-            if attribute_type.startswith("ir::VectorAttribute"):
-                inner_attribute = attribute_type[19:-1]
+            if attribute_type.startswith("ir::ArrayAttribute"):
+                inner_attribute = attribute_type[18:-1]
                 attributes_check_str += ATTRIBUTE_VECTOR_CHECK_TEMPLATE.format(
                     attribute_name=attribute_name, standard=attribute_type
                 )

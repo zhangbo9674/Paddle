@@ -15,6 +15,6 @@
 #include "paddle/ir/builtin_type.h"
 
 namespace ir {
-Type VectorType::value_type() const { return storage()->GetAsKey(); }
+Type VectorType::element_type() const { return storage()->GetAsKey(); }
 
 }  // namespace ir

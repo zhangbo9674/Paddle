@@ -19,6 +19,7 @@
 #include <type_traits>
 
 #include "paddle/ir/attribute.h"
+#include "paddle/ir/utils.h"
 
 namespace ir {
 
@@ -47,7 +48,7 @@ namespace ir {
 ///
 /// \brief Define Parameteric AttributeStorage for StrAttribute.
 ///
-struct StrAttributeStorage : public ir::AttributeStorage {
+struct StrAttributeStorage : public AttributeStorage {
   using ParamKey = std::string;
 
   explicit StrAttributeStorage(const ParamKey &key) {
@@ -83,5 +84,50 @@ DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(DoubleAttributeStorage, double);
 DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(IntAttributeStorage, int);
 DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(Int32_tAttributeStorage, int32_t);
 DECLARE_BASE_TYPE_ATTRIBUTE_STORAGE(Int64_tAttributeStorage, int64_t);
+
+struct ArrayAttributeStorage : public AttributeStorage {
+  using ParamKey = std::vector<Attribute>;
+
+  explicit ArrayAttributeStorage(const ParamKey &key) {
+    data_ =
+        reinterpret_cast<Attribute *>(malloc(sizeof(Attribute) * key.size()));
+    memcpy(reinterpret_cast<void *>(data_),
+           reinterpret_cast<void *>(const_cast<Attribute *>(key.data())),
+           sizeof(Attribute) * key.size());
+    length_ = key.size();
+  }
+
+  ~ArrayAttributeStorage() { free(reinterpret_cast<void *>(data_)); }
+
+  static ArrayAttributeStorage *Construct(ParamKey key) {
+    return new ArrayAttributeStorage(key);
+  }
+
+  static std::size_t HashValue(const ParamKey &key) {
+    std::size_t hash_value = 0;
+    for (size_t i = 0; i < key.size(); ++i) {
+      hash_value = hash_combine(hash_value, std::hash<Attribute>()(key[i]));
+    }
+    return hash_value;
+  }
+
+  bool operator==(const ParamKey &key) const {
+    if (key.size() != length_) {
+      return false;
+    }
+    for (size_t i = 0; i < length_; ++i) {
+      if (data_[i] != key[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  ParamKey GetAsKey() const { return ParamKey(data_, data_ + length_); }
+
+ private:
+  Attribute *data_ = nullptr;
+  size_t length_ = 0;
+};
 
 }  // namespace ir

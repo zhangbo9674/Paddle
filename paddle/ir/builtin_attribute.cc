@@ -31,4 +31,8 @@ int32_t Int32_tAttribute::data() const { return storage()->GetAsKey(); }
 
 int64_t Int64_tAttribute::data() const { return storage()->GetAsKey(); }
 
+std::vector<Attribute> ArrayAttribute::data() const {
+  return storage()->GetAsKey();
+}
+
 }  // namespace ir

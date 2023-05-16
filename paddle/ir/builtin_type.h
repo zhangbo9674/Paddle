@@ -126,7 +126,7 @@ class VectorType : public Type {
 
   DECLARE_TYPE_UTILITY_FUNCTOR(VectorType, VectorTypeStorage);
 
-  Type value_type() const;
+  Type element_type() const;
 };
 
 }  // namespace ir
