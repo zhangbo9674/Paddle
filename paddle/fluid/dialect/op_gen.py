@@ -52,6 +52,7 @@ H_FILE_TEMPLATE = """#pragma once
 
 CC_FILE_TEMPLATE = """#include "{h_file}"
 #include "paddle/fluid/dialect/pd_type.h"
+#include "paddle/fluid/dialect/pd_attribute.h"
 #include "paddle/ir/builtin_attribute.h"
 #include "paddle/ir/builtin_type.h"
 #include "paddle/ir/ir_context.h"
@@ -107,7 +108,7 @@ INPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<{standard}>
   """
 INPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(inputs[{index}].isa<ir::VectorType>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
-  PADDLE_ENFORCE_EQ(inputs[{index}].element_type().isa<{standard}>(), true,
+  PADDLE_ENFORCE_EQ(inputs[{index}].dyn_cast<ir::VectorType>().element_type().isa<{standard}>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th input."));
   """
 OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard}>(), true,
@@ -115,17 +116,19 @@ OUTPUT_TYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<{standard
   """
 OUTPUT_VECTORTYPE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(outputs[{index}].isa<ir::VectorType>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
-  PADDLE_ENFORCE_EQ(outputs[{index}].element_type().isa<{standard}>(), true,
+  PADDLE_ENFORCE_EQ(outputs[{index}].dyn_cast<ir::VectorType>().element_type().isa<{standard}>(), true,
                     phi::errors::PreconditionNotMet("Type validation failed for the {index}th output."));
   """
 # Example: attribute_name=xxx
 ATTRIBUTE_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<{standard}>(), true,
                     phi::errors::PreconditionNotMet("Type of attribute: {attribute_name} is not right."));
   """
-ATTRIBUTE_VECTOR_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<ir::VectorAttribute>(), true,
+ATTRIBUTE_VECTOR_CHECK_TEMPLATE = """PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").isa<ir::ArrayAttribute>(), true,
                     phi::errors::PreconditionNotMet("Type of attribute: {attribute_name} is not right."));
-  PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").InnerAttribute().isa<{standard}>(), true,
-                    phi::errors::PreconditionNotMet("Type of attribute: {attribute_name} is not right."));
+  for (size_t i = 0; i < attributes.at("{attribute_name}").dyn_cast<ir::ArrayAttribute>().size(); i++) {{
+    PADDLE_ENFORCE_EQ(attributes.at("{attribute_name}").dyn_cast<ir::ArrayAttribute>()[i].isa<{standard}>(), true,
+                      phi::errors::PreconditionNotMet("Type of attribute: {attribute_name} is not right."));
+  }}
   """
 
 
@@ -164,7 +167,7 @@ class OpInfo(BaseAPI):
         }
         # attribute Paddle Type -> ir Attribute
         self.attr_type_map = {
-            'const IntArray&': 'paddle::dialect::Int64_tArrayAttribute',
+            'const IntArray&': 'paddle::dialect::IntArrayAttribute',
             'const Scalar&': 'paddle::dialect::ScalarAttribute',
             'const std::vector<phi::Scalar>&': 'ir::ArrayAttribute<paddle::dialect::ScalarAttribute>',
             'int': 'ir::IntAttribute',
@@ -316,7 +319,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
         for idx in range(len(op_inputs_type)):
             input_type = op_inputs_type[idx]
             if input_type.startswith("ir::VectorType"):
-                inner_type = input_type[14:-1]
+                inner_type = input_type[15:-1]
                 inputs_type_check_str += INPUT_VECTORTYPE_CHECK_TEMPLATE.format(
                     index=idx, standard=inner_type
                 )
@@ -334,7 +337,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
         for idx in range(len(op_outputs_type)):
             output_type = op_outputs_type[idx]
             if output_type.startswith("ir::VectorType"):
-                inner_type = output_type[14:-1]
+                inner_type = output_type[15:-1]
                 outputs_type_check_str += (
                     OUTPUT_VECTORTYPE_CHECK_TEMPLATE.format(
                         index=idx, standard=inner_type
@@ -355,9 +358,9 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
             attribute_name = op_attributes_name[idx]
             attribute_type = op_attributes_type[idx]
             if attribute_type.startswith("ir::ArrayAttribute"):
-                inner_attribute = attribute_type[18:-1]
+                inner_attribute = attribute_type[19:-1]
                 attributes_check_str += ATTRIBUTE_VECTOR_CHECK_TEMPLATE.format(
-                    attribute_name=attribute_name, standard=attribute_type
+                    attribute_name=attribute_name, standard=inner_attribute
                 )
             else:
                 attributes_check_str += ATTRIBUTE_CHECK_TEMPLATE.format(
