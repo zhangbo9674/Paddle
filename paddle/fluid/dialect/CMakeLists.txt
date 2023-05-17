@@ -12,6 +12,7 @@ set(op_source_file ${PD_DIALECT_BINARY_DIR}/pd_op.cc)
 set(op_header_file_tmp ${op_header_file}.tmp)
 set(op_source_file_tmp ${op_source_file}.tmp)
 set(op_namespace paddle,dialect)
+set(dialect_name pd)
 
 add_custom_command(
   OUTPUT ${op_header_file} ${op_source_file}
@@ -20,6 +21,7 @@ add_custom_command(
     ${PYTHON_EXECUTABLE} ${op_gen_file} --op_yaml ${api_yaml_file}
     ${legacy_api_yaml_file} --op_header_file ${op_header_file_tmp}
     --op_source_file ${op_source_file_tmp} --namespaces ${op_namespace}
+    --dialect_name ${dialect_name}
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${op_header_file_tmp}
           ${op_header_file}
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${op_source_file_tmp}

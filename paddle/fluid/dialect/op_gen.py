@@ -34,6 +34,7 @@ def ParseArguments():
     parser.add_argument('--op_header_file', type=str)
     parser.add_argument('--op_source_file', type=str)
     parser.add_argument('--namespaces', type=str)
+    parser.add_argument('--dialect_name', type=str)
     args = parser.parse_args()
     return args
 
@@ -70,7 +71,7 @@ OP_DECLARE_ATTRIBUTES_TEMPLATE = """
 class {op_name}Op : public ir::Op<{op_name}Op{interfaces}{traits}> {{
  public:
   using Op::Op;
-  static const char *name() {{ return "{op_name}Op"; }}
+  static const char *name() {{ return "{dialect_op_name}Op"; }}
   {attribute_declare}
   static constexpr uint32_t attributes_num = {attribute_num};
   static void verify(const std::vector<ir::Type> &inputs, const std::vector<ir::Type> &outputs, const ir::AttributeMap &attributes);
@@ -240,7 +241,9 @@ class OpInfo(BaseAPI):
 
 
 # Generate files
-def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
+def GenerateOpDefFile(
+    op_yaml_files, header_file, source_file, namespaces, dialect_name
+):
     # (1) Delete existing old files: pd_op.h.tmp, pd_op.cc.tmp
     if os.path.exists(header_file):
         os.remove(header_file)
@@ -285,6 +288,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
         if len(op_attributes_name) == 0:
             op_declare_str = OP_DECLARE_ATTRIBUTES_TEMPLATE.format(
                 op_name=op_name,
+                dialect_op_name=dialect_name + "." + op_name,
                 interfaces=op_interfaces_str,
                 traits=op_traits_str,
                 attribute_declare=op_0_attribute_declare_str,
@@ -296,6 +300,7 @@ def GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces):
         else:
             op_declare_str = OP_DECLARE_ATTRIBUTES_TEMPLATE.format(
                 op_name=op_name,
+                dialect_op_name=dialect_name + "." + op_name,
                 interfaces=op_interfaces_str,
                 traits=op_traits_str,
                 attribute_declare=op_n_attribute_declare_str.format(
@@ -420,5 +425,8 @@ if __name__ == "__main__":
         namespaces = args.namespaces.split(",")
     else:
         namespaces = []
+    dialect_name = args.dialect_name
 
-    GenerateOpDefFile(op_yaml_files, header_file, source_file, namespaces)
+    GenerateOpDefFile(
+        op_yaml_files, header_file, source_file, namespaces, dialect_name
+    )

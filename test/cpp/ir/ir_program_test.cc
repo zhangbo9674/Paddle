@@ -78,8 +78,7 @@ TEST(program_test, program) {
   EXPECT_EQ(program.parameters_num() == 2, true);
 
   // (4) Def a = GetParameterOp("a"), and create DenseTensor for a.
-  std::string op1_name =
-      builtin_dialect->name() + "." + std::string(ir::GetParameterOp::name());
+  std::string op1_name = std::string(ir::GetParameterOp::name();
   ir::OpInfoImpl *op1_info = ctx->GetRegisteredOpInfo(op1_name);
   std::unordered_map<std::string, ir::Attribute> op1_attribute{
       {"parameter_name", ir::StrAttribute::get(ctx, "a")}};
@@ -110,8 +109,7 @@ TEST(program_test, program) {
   }
 
   // (5) Def b = GetParameterOp("b"), and create DenseTensor for b.
-  std::string op2_name =
-      builtin_dialect->name() + "." + std::string(ir::GetParameterOp::name());
+  std::string op2_name = std::string(ir::GetParameterOp::name();
   ir::OpInfoImpl *op2_info = ctx->GetRegisteredOpInfo(op2_name);
   std::unordered_map<std::string, ir::Attribute> op2_attribute{
       {"parameter_name", ir::StrAttribute::get(ctx, "b")}};
@@ -140,8 +138,7 @@ TEST(program_test, program) {
   }
 
   // (6) Def c = AddOp(a, b), execute this op.
-  std::string op3_name =
-      builtin_dialect->name() + "." + std::string(AddOp::name());
+  std::string op3_name = std::string(AddOp::name();
   ir::OpInfoImpl *op3_info = ctx->GetRegisteredOpInfo(op3_name);
   std::unordered_map<std::string, ir::Attribute> op3_attribute;
   ir::Operation *op3 = ir::Operation::create(
@@ -171,8 +168,7 @@ TEST(program_test, program) {
   }
 
   // (7) Def SetParameterOp(c, "c")
-  std::string op4_name =
-      builtin_dialect->name() + "." + std::string(ir::SetParameterOp::name());
+  std::string op4_name = std::string(ir::SetParameterOp::name();
   ir::OpInfoImpl *op4_info = ctx->GetRegisteredOpInfo(op4_name);
   std::unordered_map<std::string, ir::Attribute> op4_attribute{
       {"parameter_name", ir::StrAttribute::get(ctx, "c")}};
