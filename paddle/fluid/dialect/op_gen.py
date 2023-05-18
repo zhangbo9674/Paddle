@@ -53,7 +53,9 @@ class {op_name} : public ir::Op<{op_name}{interfaces}{traits}> {{
 {get_inputs_and_outputs}
 }};
 """
-op_0_attribute_declare_str = "static const char **attributes_name;"
+op_0_attribute_declare_str = (
+    "static constexpr const char **attributes_name = nullptr;"
+)
 op_n_attribute_declare_str = (
     "static const char *attributes_name[{attribute_num}];"
 )
@@ -77,9 +79,6 @@ CC_FILE_TEMPLATE = """#include "{h_file}"
 {input}
 """
 
-OP_0_ATTRIBUTE_DEFINED_TEMPLATE = """
-const char **{op_name}::attributes_name = nullptr;
-"""
 OP_N_ATTRIBUTE_DEFINED_TEMPLATE = """
 const char *{op_name}::attributes_name[{attribute_num}] = {{ {attribute_names} }};
 """
@@ -311,6 +310,14 @@ def to_phi_and_fluid_op_name(op_item):
         return phi_name, fluid_name
 
 
+def to_pascal_case(s):
+    words = s.split("_")
+    if s[-1] == "_":
+        return "".join([word.capitalize() for word in words]) + "_"
+    else:
+        return "".join([word.capitalize() for word in words]) + ""
+
+
 # =====================================
 # Generate op definition files
 # =====================================
@@ -363,6 +370,7 @@ def OpGenerator(
     for op_info in op_info_items:
         # get op info
         op_name = op_info.parse_op_fluid_name(op_name_phi_to_fluid_dict)
+        op_class_name = to_pascal_case(op_name) + "Op"
         op_dialect_name = dialect_name + "." + op_name
         op_input_name_list = op_info.input_name_list
         op_input_type_list = op_info.input_type_list
@@ -396,7 +404,7 @@ def OpGenerator(
         # gen op_declare_str/op_defined_str
         if len(op_attribute_name_list) == 0:
             op_declare_str = OP_DECLARE_TEMPLATE.format(
-                op_name=op_name,
+                op_name=op_class_name,
                 dialect_op_name=op_dialect_name,
                 interfaces=op_interfaces_str,
                 traits=op_traits_str,
@@ -404,12 +412,10 @@ def OpGenerator(
                 attribute_num=0,
                 get_inputs_and_outputs=op_get_inputs_outputs_str,
             )
-            op_defined_str = OP_0_ATTRIBUTE_DEFINED_TEMPLATE.format(
-                op_name=op_name
-            )
+            op_defined_str = ""
         else:
             op_declare_str = OP_DECLARE_TEMPLATE.format(
-                op_name=op_name,
+                op_name=op_class_name,
                 dialect_op_name=op_dialect_name,
                 interfaces=op_interfaces_str,
                 traits=op_traits_str,
@@ -423,7 +429,7 @@ def OpGenerator(
                 '"' + '", "'.join(op_attribute_name_list) + '"'
             )
             op_defined_str = OP_N_ATTRIBUTE_DEFINED_TEMPLATE.format(
-                op_name=op_name,
+                op_name=op_class_name,
                 attribute_num=len(op_attribute_name_list),
                 attribute_names=attribute_names_str,
             )
@@ -522,7 +528,7 @@ def OpGenerator(
 
         # generate op verify function
         op_verify_str = OP_VERIFY_TEMPLATE.format(
-            op_name=op_name,
+            op_name=op_class_name,
             inputs_size=len(op_input_type_list),
             outputs_size=len(op_output_type_list),
             inputs_type_check=inputs_type_check_str,
@@ -530,7 +536,7 @@ def OpGenerator(
             attributes_check=attributes_check_str,
         )
 
-        ops_name_list.append(op_name)
+        ops_name_list.append(op_class_name)
         ops_declare_list.append(op_declare_str)
         ops_defined_list.append(op_defined_str)
         ops_defined_list.append(op_verify_str)

@@ -46,9 +46,9 @@ class alignas(8) Operation final {
   ///
   void destroy();
 
-  ir::OpResult GetResultByIndex(uint32_t index);
+  ir::OpResult GetResultByIndex(uint32_t index) const;
 
-  ir::OpOperand GetOperandByIndex(uint32_t index);
+  ir::OpOperand GetOperandByIndex(uint32_t index) const;
 
   std::string print();
 
