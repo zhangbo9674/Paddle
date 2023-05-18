@@ -119,7 +119,7 @@ TEST(op_test, op_test) {
   std::string op1_name = Operation1::name();
   ir::OpInfoImpl *op1_info = ctx->GetRegisteredOpInfo(op1_name);
   EXPECT_EQ(op1_info != nullptr, true);
-  std::string op2_name = std::string(Operation2::name();
+  std::string op2_name = std::string(Operation2::name());
   ir::OpInfoImpl *op2_info = ctx->GetRegisteredOpInfo(op2_name);
   EXPECT_EQ(op2_info != nullptr, true);
 

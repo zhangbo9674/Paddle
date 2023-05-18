@@ -1,110 +1,131 @@
-# conv2d_grad
-
-# feed
-
-# batch_norm_grad
-
-# relu_grad
-
-# elementwise_add
-
-# elementwise_add_grad
-
-# pool2d_grad
-
-# flatten_contiguous_range
-
-# flatten_contiguous_range_grad
-
-# matmul_v2
-
-# matmul_v2_grad
-
-# reshape2
-
-# softmax_with_cross_entropy
-
-# softmax_with_cross_entropy_grad
-
-# reduce_mean
-
-# reduce_mean_grad
-
-# top_k_v2
-
-# scale
-
-# fill_constant
-
-# fetch_v2
-
-- op : accuracy
-  args : (Tensor x, Tensor indices, Tensor label)
-  output : Tensor(accuracy), Tensor(correct), Tensor(total)
-  infer_meta :
-    func : AccuracyInferMeta
-  kernel :
-    func : accuracy
-    data_type : x
-
-- op : batch_norm
-  args : (Tensor x, Tensor mean, Tensor variance, Tensor scale, Tensor bias, bool is_test, float momentum, float epsilon, str data_layout, bool use_global_stats, bool trainable_statistics)
-  output : Tensor(out), Tensor(mean_out), Tensor(variance_out), Tensor(saved_mean), Tensor(saved_variance), Tensor(reserve_space)
+- name: accuracy
+  inputs:
+  - typename: Tensor
+    name: x
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: indices
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: label
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  attrs: []
+  outputs:
+  - {typename: Tensor, name: accuracy, optional: false, intermediate: false}
+  - {typename: Tensor, name: correct, optional: false, intermediate: false}
+  - {typename: Tensor, name: total, optional: false, intermediate: false}
+  no_need_buffer: null
+  data_transform: null
   infer_meta:
-    func : BatchNormInferMeta
-  kernel :
-    func : batch_norm
-    data_type : x
-  view : (mean -> mean_out), (variance -> variance_out)
-  backward : batch_norm_grad
-
-- op : conv2d
-  args : (Tensor input, Tensor filter, int[] strides, int[] paddings, str padding_algorithm, int[] dilations, int groups, str data_format)
-  output : Tensor
-  infer_meta :
-    func : ConvInferMeta
-  kernel :
-    func : conv2d
-  backward : conv2d_grad
-
-- op : merged_momentum_
-  args : (Tensor[] param, Tensor[] grad, Tensor[] velocity, Tensor[] learning_rate, Tensor[] master_param, float mu, bool use_nesterov = false, str[] regularization_method = {}, float[] regularization_coeff = {}, bool multi_precision = false, float rescale_grad = 1.0f)
-  output : Tensor[](param_out){param.size()}, Tensor[](velocity_out){param.size()}, Tensor[](master_param_out){param.size()}
-  infer_meta :
-    func : MergedMomentumInferMeta
-  kernel :
-    func : merged_momentum
-    data_type : param
-  optional: master_param, master_param_out
-  inplace : (param -> param_out), (velocity -> velocity_out), (master_param -> master_param_out)
-
-- op : pool2d
-  args : (Tensor x, IntArray kernel_size, int[] strides, int[] paddings, bool ceil_mode, bool exclusive, str data_format, str pooling_type, bool global_pooling, bool adaptive, str padding_algorithm)
-  output : Tensor(out)
-  infer_meta :
-    func : Pool2DInferMeta
-    param : [x, kernel_size, strides, paddings, ceil_mode, exclusive, data_format, pooling_type, global_pooling, adaptive, padding_algorithm]
-  kernel :
-    func : pool2d
-    param : [x, kernel_size, strides, paddings, ceil_mode, exclusive, data_format, pooling_type, global_pooling, adaptive, padding_algorithm]
-  backward : pool2d_grad
-
-- op : relu
-  args : (Tensor x)
-  output : Tensor(out)
-  infer_meta :
-    func : UnchangedInferMeta
-  kernel :
-    func : relu
-  inplace : (x -> out)
-  backward : relu_grad
-
-- op : sum
-  args : (Tensor x, IntArray axis={}, DataType dtype=DataType::UNDEFINED, bool keepdim=false)
-  output : Tensor(out)
-  infer_meta :
-    func : SumInferMeta
-  kernel :
-    func : sum
-    data_type : x
-  backward : sum_grad
+    func: AccuracyInferMeta
+    param: [x, indices, label]
+  kernel:
+    func: [accuracy]
+    param: [x, indices, label]
+    backend: null
+    layout: null
+    data_type:
+      ordered: false
+      candidates: [x]
+      to_complex_flag: [false]
+    dispatch: {accuracy: null}
+    force_backend: null
+  inplace: null
+  backward: null
+- name: adam_
+  inputs:
+  - typename: Tensor
+    name: param
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: grad
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: learning_rate
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: moment1
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: moment2
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: beta1_pow
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: beta2_pow
+    optional: false
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: master_param
+    optional: true
+    no_need_buffer: false
+    data_transform: {}
+  - typename: Tensor
+    name: skip_update
+    optional: true
+    no_need_buffer: false
+    data_transform: {}
+  attrs:
+  - {typename: Scalar, name: beta1, default_value: 0.9f, data_type: float}
+  - {typename: Scalar, name: beta2, default_value: 0.999f, data_type: float}
+  - {typename: Scalar, name: epsilon, default_value: 1.0e-8f, data_type: float}
+  - {typename: bool, name: lazy_mode, default_value: 'false'}
+  - {typename: int64_t, name: min_row_size_to_use_multithread, default_value: '1000'}
+  - {typename: bool, name: multi_precision, default_value: 'false'}
+  - {typename: bool, name: use_global_beta_pow, default_value: 'false'}
+  outputs:
+  - {typename: Tensor, name: param_out, optional: false, intermediate: false}
+  - {typename: Tensor, name: moment1_out, optional: false, intermediate: false}
+  - {typename: Tensor, name: moment2_out, optional: false, intermediate: false}
+  - {typename: Tensor, name: beta1_pow_out, optional: false, intermediate: false}
+  - {typename: Tensor, name: beta2_pow_out, optional: false, intermediate: false}
+  - {typename: Tensor, name: master_param_out, optional: true, intermediate: false}
+  no_need_buffer: null
+  data_transform: null
+  infer_meta:
+    func: AdamInferMeta
+    param: [param, grad, learning_rate, moment1, moment2, beta1_pow, beta2_pow, master_param,
+      skip_update, beta1, beta2, epsilon, lazy_mode, min_row_size_to_use_multithread,
+      multi_precision, use_global_beta_pow]
+  kernel:
+    func: [adam, adam_dense_param_sparse_grad]
+    param: [param, grad, learning_rate, moment1, moment2, beta1_pow, beta2_pow, master_param,
+      skip_update, beta1, beta2, epsilon, lazy_mode, min_row_size_to_use_multithread,
+      multi_precision, use_global_beta_pow]
+    backend: null
+    layout: null
+    data_type:
+      ordered: false
+      candidates: [param]
+      to_complex_flag: [false]
+    dispatch:
+      adam:
+      - [dense, dense, dense, dense, dense, dense, dense, dense, dense]
+      - [dense, dense, dense, dense, dense, dense]
+      adam_dense_param_sparse_grad:
+      - [dense, selected_rows, dense, dense, dense, dense, dense, dense, dense]
+      - [dense, dense, dense, dense, dense, dense]
+    force_backend: null
+  inplace: {param_out): param, moment1_out): (moment1, moment2_out): (moment2, beta1_pow_out): (beta1_pow,
+    beta2_pow_out): (beta2_pow, master_param_out: (master_param}
+  backward: null

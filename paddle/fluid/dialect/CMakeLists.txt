@@ -3,31 +3,44 @@ set(PD_DIALECT_BINARY_DIR "${PADDLE_BINARY_DIR}/paddle/fluid/dialect")
 
 # Generate pd_dialect files defining op using op_gen_file
 set(op_gen_file ${PADDLE_SOURCE_DIR}/paddle/fluid/dialect/op_gen.py)
-set(api_yaml_file ${PADDLE_SOURCE_DIR}/paddle/phi/api/yaml/ops.yaml)
-set(legacy_api_yaml_file${PADDLE_SOURCE_DIR}/paddle/phi/api/yaml/legacy_ops.yaml
+set(op_compat_yaml_file ${PADDLE_SOURCE_DIR}/paddle/phi/api/yaml/op_compat.yaml)
+set(op_forward_yaml_file1
+    ${PADDLE_SOURCE_DIR}/paddle/fluid/operators/generator/parsed_ops/ops.parsed.yaml
 )
-
+set(op_forward_yaml_file2
+    ${PADDLE_SOURCE_DIR}/paddle/fluid/operators/generator/parsed_ops/static_ops.parsed.yaml
+)
+set(op_backward_yaml_file1
+    ${PADDLE_SOURCE_DIR}/paddle/fluid/operators/generator/parsed_ops/backward_ops.parsed.yaml
+)
+set(op_backward_yaml_file2
+    ${PADDLE_SOURCE_DIR}/paddle/fluid/operators/generator/parsed_ops/static_backward.parsed.yaml
+)
+set(op_yaml_files
+    ${op_forward_yaml_file1},${op_forward_yaml_file2},${op_backward_yaml_file1},${op_backward_yaml_file2}
+)
+set(op_namespace paddle,dialect)
+set(dialect_name pd)
 set(op_header_file ${PD_DIALECT_BINARY_DIR}/pd_op.h)
 set(op_source_file ${PD_DIALECT_BINARY_DIR}/pd_op.cc)
 set(op_header_file_tmp ${op_header_file}.tmp)
 set(op_source_file_tmp ${op_source_file}.tmp)
-set(op_namespace paddle,dialect)
-set(dialect_name pd)
 
 add_custom_command(
   OUTPUT ${op_header_file} ${op_source_file}
-  COMMAND ${PYTHON_EXECUTABLE} -m pip install pyyaml
   COMMAND
-    ${PYTHON_EXECUTABLE} ${op_gen_file} --op_yaml ${api_yaml_file}
-    ${legacy_api_yaml_file} --op_header_file ${op_header_file_tmp}
-    --op_source_file ${op_source_file_tmp} --namespaces ${op_namespace}
-    --dialect_name ${dialect_name}
+    ${PYTHON_EXECUTABLE} ${op_gen_file} --op_yaml_files ${op_yaml_files}
+    --op_compat_yaml_file ${op_compat_yaml_file} --namespaces ${op_namespace}
+    --dialect_name ${dialect_name} --op_def_h_file ${op_header_file_tmp}
+    --op_def_cc_file ${op_source_file_tmp}
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${op_header_file_tmp}
           ${op_header_file}
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${op_source_file_tmp}
           ${op_source_file}
   COMMENT "copy_if_different ${op_header_file} ${op_source_file}"
-  DEPENDS ${op_gen_file} ${api_yaml_file} ${legacy_api_yaml_file}
+  DEPENDS ${op_gen_file} ${op_forward_yaml_file1} ${op_forward_yaml_file2}
+          ${op_backward_yaml_file1} ${op_backward_yaml_file2}
+          ${op_compat_yaml_file}
   VERBATIM)
 
 # All source files of pd_dialect, except for the source file of op, which is generated in the compilation directory.
