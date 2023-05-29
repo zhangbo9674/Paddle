@@ -653,9 +653,7 @@ def GenBuildOutputs(
                 name=op_output_name_list[idx],
                 output_size=op_output_size_list[idx],
             )
-            infer_meta_args.append(
-                f"vec_meta_{op_output_name_list[idx]}_ptr"
-            )
+            infer_meta_args.append(f"vec_meta_{op_output_name_list[idx]}_ptr")
         # is a Tensor
         else:
             output_str += CREATE_OUTPUT_METATENSOR_TEMPLATE.format(
