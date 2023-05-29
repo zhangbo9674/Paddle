@@ -38,6 +38,8 @@ class DenseTensorType : public ir::Type {
   const paddle::dialect::DenseTensorTypeStorage::LoD &lod() const;
 
   const size_t &offset() const;
+
+  phi::DenseTensorMeta Meta() const;
 };
 
 }  // namespace dialect

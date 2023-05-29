@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "paddle/fluid/dialect/pd_type.h"
+#include "paddle/fluid/dialect/utils.h"
 
 namespace paddle {
 namespace dialect {
@@ -34,6 +35,14 @@ const paddle::dialect::DenseTensorTypeStorage::LoD& DenseTensorType::lod()
 }
 
 const size_t& DenseTensorType::offset() const { return storage()->offset_; }
+
+phi::DenseTensorMeta DenseTensorType::Meta() const {
+  return phi::DenseTensorMeta(TransToPhiDataType(dtype()),
+                              make_ddim(dim()),
+                              TransToPhiDataLayout(data_layout()),
+                              lod(),
+                              offset());
+}
 
 }  // namespace dialect
 }  // namespace paddle
