@@ -28,6 +28,13 @@
 #include "paddle/phi/infermeta/binary.h"
 #include "paddle/phi/kernels/elementwise_add_kernel.h"
 
+#include "paddle/fluid/dialect/pd_attribute.h"
+#include "paddle/phi/infermeta/backward.h"
+#include "paddle/phi/infermeta/multiary.h"
+#include "paddle/phi/infermeta/nullary.h"
+#include "paddle/phi/infermeta/ternary.h"
+#include "paddle/phi/infermeta/unary.h"
+
 class AddOp : public ir::Op<AddOp> {
  public:
   using Op::Op;
@@ -280,4 +287,34 @@ TEST(program_test, slice_combine_test) {
 
   // (8) Traverse Program
   EXPECT_EQ(program.block()->size() == 4, true);
+}
+
+TEST(program_test, builder) {
+  ir::IrContext *ctx = ir::IrContext::Instance();
+  ctx->GetOrRegisterDialect<ir::BuiltinDialect>();
+  ctx->GetOrRegisterDialect<paddle::dialect::PaddleDialect>();
+  ir::Program program;
+  ir::Builder builder = ir::Builder::AtBlockEnd(ctx, program.block());
+
+  paddle::dialect::FullOp full_op = builder.create<paddle::dialect::FullOp,
+                                                   std::vector<int64_t>,
+                                                   float,
+                                                   phi::DataType,
+                                                   phi::Place>(
+      {2, 2}, 1.5, phi::DataType::FLOAT32, phi::CPUPlace());
+  ir::Type full_op_output = full_op.operation()->GetResultByIndex(0).type();
+
+  EXPECT_EQ(program.block()->size() == 1, true);
+  EXPECT_EQ(program.block()->back() == full_op.operation(), true);
+  EXPECT_EQ(full_op.operation()->num_operands() == 0, true);
+  EXPECT_EQ(full_op.operation()->num_results() == 1, true);
+  EXPECT_EQ(full_op.operation()->attribute().size() == 4, true);
+  EXPECT_EQ(
+      full_op_output.dyn_cast<paddle::dialect::DenseTensorType>().offset() == 0,
+      true);
+  for (auto dim : phi::vectorize(
+           full_op_output.dyn_cast<paddle::dialect::DenseTensorType>()
+               .dims())) {
+    EXPECT_EQ(dim == 2, true);
+  }
 }
